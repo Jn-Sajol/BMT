@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bmt-api-pdb
+  namespace: bmt-prod
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: bmt-api

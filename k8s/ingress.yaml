@@ -1,0 +1,19 @@
+apiVersion:networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bmt-ingress
+  namespace: bmt-prod
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+  - host: api.bmt.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bmt-api-service
+            port:
+              number: 80

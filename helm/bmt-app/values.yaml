@@ -1,0 +1,24 @@
+replicaCount: 2
+
+image:
+  repository: bmt-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  host: api.bmt.io
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+databaseUrl: "postgresql://postgres:postgres@localhost:5432/bmt"

@@ -1,0 +1,8 @@
+-- Alter Table: user_sessions
+ALTER TABLE "user_sessions" 
+ADD COLUMN "device" VARCHAR,
+ADD COLUMN "browser" VARCHAR,
+ADD COLUMN "os" VARCHAR,
+ADD COLUMN "country" VARCHAR,
+ADD COLUMN "city" VARCHAR,
+ADD COLUMN "last_activity_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;

@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: mos_postgres_local
+    environment:
+      POSTGRES_DB: mos_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: securepassword123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mos_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: mos_pgadmin_local
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@jnsoft.local
+      PGADMIN_DEFAULT_PASSWORD: adminpassword123
+    ports:
+      - "5050:80"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: mos_redis_local
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mos_mailhog_local
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+
+volumes:
+  postgres_data:

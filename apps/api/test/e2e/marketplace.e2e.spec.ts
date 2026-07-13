@@ -1,0 +1,5 @@
+describe('Marketplace E2E Test Skeleton', () => {
+  it('should list template products and install them', () => {
+    expect(true).toBe(true);
+  });
+});
