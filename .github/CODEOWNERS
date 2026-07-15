@@ -1,0 +1,10 @@
+# Global owners
+*       @principal-architect
+
+# Module-specific owners
+/apps/api/src/modules/automation/recommendation/ @lead-ai-engineer
+/apps/api/src/modules/automation/marketplace/    @marketplace-lead
+/apps/api/src/modules/automation/notification/   @notifications-lead
+/k8s/                                             @devops-lead
+/helm/                                            @devops-lead
+/.github/workflows/                               @devops-lead
