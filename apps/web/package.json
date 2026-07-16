@@ -28,7 +28,8 @@
     "postcss": "^8.4.39",
     "autoprefixer": "^10.4.19",
     "@xyflow/react": "^12.0.4",
-    "automation-nodes": "workspace:*"
+    "automation-nodes": "workspace:*",
+    "security-vault": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",
