@@ -28,17 +28,41 @@ export default function SafeLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           <nav className="space-y-1">
-            <button className="w-full text-left px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-semibold text-sm">
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/safe/dashboard`)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm"
+            >
               Dashboard
             </button>
-            <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm">
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/safe/analytics`)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm"
+            >
               Analytics
             </button>
-            <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm">
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/safe/recommendations`)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm"
+            >
               Recommendations
             </button>
-            <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm">
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/safe/marketplace`)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm"
+            >
+              Marketplace
+            </button>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/safe/notifications`)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm"
+            >
               Notifications
+            </button>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/safe/settings`)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm"
+            >
+              Settings
             </button>
           </nav>
         </div>
