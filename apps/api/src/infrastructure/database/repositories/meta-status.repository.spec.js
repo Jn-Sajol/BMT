@@ -1,0 +1,7 @@
+"use strict";
+describe('MetaStatusRepository Unit Tests Skeleton', () => {
+    it('compiles and validates test execution context', () => {
+        expect(true).toBe(true);
+    });
+});
+//# sourceMappingURL=meta-status.repository.spec.js.map

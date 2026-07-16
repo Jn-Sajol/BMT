@@ -1,0 +1,1 @@
+{"version":3,"file":"openai.mock.js","sourceRoot":"","sources":["openai.mock.ts"],"names":[],"mappings":";;;AAAA,MAAa,UAAU;IACrB,KAAK,CAAC,kBAAkB,CAAC,MAAc;QACrC,OAAO;YACL,IAAI,EAAE,0CAA0C,MAAM,EAAE;YACxD,KAAK,EAAE,EAAE,YAAY,EAAE,EAAE,EAAE,gBAAgB,EAAE,EAAE,EAAE;SAClD,CAAC;IACJ,CAAC;CACF;AAPD,gCAOC"}

@@ -1,0 +1,32 @@
+import { MetaGraphClient } from '../../infrastructure/oauth/meta-graph-client';
+import { MetaConnectionRepository } from '../../../../infrastructure/database/repositories/meta-connection.repository';
+import { MetaBusinessRepository } from '../../../../infrastructure/database/repositories/meta-business.repository';
+import { MetaPageRepository } from '../../../../infrastructure/database/repositories/meta-page.repository';
+import { MetaAdAccountRepository } from '../../../../infrastructure/database/repositories/meta-ad-account.repository';
+import { MetaBusinessPageRepository } from '../../../../infrastructure/database/repositories/meta-business-page.repository';
+import { MetaBusinessAdAccountRepository } from '../../../../infrastructure/database/repositories/meta-business-ad-account.repository';
+import { MetaBusinessPixelRepository } from '../../../../infrastructure/database/repositories/meta-business-pixel.repository';
+import { MetaBusinessCatalogRepository } from '../../../../infrastructure/database/repositories/meta-business-catalog.repository';
+import { MetaPageInstagramRepository } from '../../../../infrastructure/database/repositories/meta-page-instagram.repository';
+import { MetaAdAccountPixelRepository } from '../../../../infrastructure/database/repositories/meta-ad-account-pixel.repository';
+import { IEncryption } from '../../../../common/ports/encryption.interface';
+import { IClockProvider } from '../../../../common/ports/clock-provider.interface';
+export declare class MetaRelationshipSyncService {
+    private readonly metaConnRepo;
+    private readonly metaBusinessRepo;
+    private readonly metaPageRepo;
+    private readonly metaAdAccountRepo;
+    private readonly businessPageRepo;
+    private readonly businessAdAccountRepo;
+    private readonly businessPixelRepo;
+    private readonly businessCatalogRepo;
+    private readonly pageInstagramRepo;
+    private readonly adAccountPixelRepo;
+    private readonly graphClient;
+    private readonly encryptionService;
+    private readonly clockProvider;
+    constructor(metaConnRepo: MetaConnectionRepository, metaBusinessRepo: MetaBusinessRepository, metaPageRepo: MetaPageRepository, metaAdAccountRepo: MetaAdAccountRepository, businessPageRepo: MetaBusinessPageRepository, businessAdAccountRepo: MetaBusinessAdAccountRepository, businessPixelRepo: MetaBusinessPixelRepository, businessCatalogRepo: MetaBusinessCatalogRepository, pageInstagramRepo: MetaPageInstagramRepository, adAccountPixelRepo: MetaAdAccountPixelRepository, graphClient: MetaGraphClient, encryptionService: IEncryption, clockProvider: IClockProvider);
+    syncRelationships(workspaceId: string, userId: string): Promise<any>;
+    private fetchRelationships;
+    private applySoftDeletes;
+}

@@ -37,10 +37,55 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const health_module_1 = require("./health/health.module");
+const database_module_1 = require("./infrastructure/database/database.module");
+const identity_module_1 = require("./application/identity.module");
+const security_module_1 = require("./infrastructure/security/security.module");
+const auth_module_1 = require("./application/auth/auth.module");
+const registration_module_1 = require("./application/registration/registration.module");
+const organization_module_1 = require("./application/organization.module");
+const workspace_module_1 = require("./application/workspace.module");
+const organization_member_module_1 = require("./application/organization-member.module");
+const verification_module_1 = require("./application/verification.module");
+const password_reset_module_1 = require("./application/password-reset.module");
+const rbac_module_1 = require("./application/rbac.module");
+const meta_module_1 = require("./modules/meta/meta.module");
+const webhook_module_1 = require("./modules/webhook/webhook.module");
+const scheduler_module_1 = require("./modules/scheduler/scheduler.module");
+const automation_module_1 = require("./modules/automation/automation.module");
+const campaign_module_1 = require("./application/campaign/campaign.module");
+const adset_module_1 = require("./application/adset/adset.module");
+const adcreative_module_1 = require("./application/adcreative/adcreative.module");
+const ad_module_1 = require("./application/ad/ad.module");
+const media_module_1 = require("./application/media/media.module");
 const request_id_middleware_1 = require("./common/middleware/request-id.middleware");
+const request_context_middleware_1 = require("./common/context/request-context.middleware");
+const observability_module_1 = require("./infrastructure/observability/observability.module");
 let AppModule = (() => {
     let _classDecorators = [(0, common_1.Module)({
-            imports: [health_module_1.HealthModule],
+            imports: [
+                health_module_1.HealthModule,
+                database_module_1.DatabaseModule,
+                identity_module_1.IdentityModule,
+                security_module_1.SecurityModule,
+                auth_module_1.AuthModule,
+                registration_module_1.RegistrationModule,
+                organization_module_1.OrganizationModule,
+                workspace_module_1.WorkspaceModule,
+                organization_member_module_1.OrganizationMemberModule,
+                verification_module_1.VerificationModule,
+                password_reset_module_1.PasswordResetModule,
+                rbac_module_1.RbacModule,
+                meta_module_1.MetaModule,
+                webhook_module_1.WebhookModule,
+                scheduler_module_1.SchedulerModule,
+                automation_module_1.AutomationModule,
+                campaign_module_1.CampaignModule,
+                adset_module_1.AdSetModule,
+                adcreative_module_1.AdCreativeModule,
+                ad_module_1.AdModule,
+                media_module_1.MediaModule,
+                observability_module_1.ObservabilityModule,
+            ],
         })];
     let _classDescriptor;
     let _classExtraInitializers = [];
@@ -55,7 +100,9 @@ let AppModule = (() => {
             __runInitializers(_classThis, _classExtraInitializers);
         }
         configure(consumer) {
-            consumer.apply(request_id_middleware_1.RequestIdMiddleware).forRoutes('*');
+            consumer
+                .apply(request_id_middleware_1.RequestIdMiddleware, request_context_middleware_1.RequestContextMiddleware)
+                .forRoutes('*');
         }
     };
     return AppModule = _classThis;

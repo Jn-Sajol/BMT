@@ -36,6 +36,7 @@ var __runInitializers = (this && this.__runInitializers) || function (thisArg, i
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AllExceptionsFilter = void 0;
 const common_1 = require("@nestjs/common");
+const base_exception_1 = require("../exceptions/base.exception");
 let AllExceptionsFilter = (() => {
     let _classDecorators = [(0, common_1.Catch)()];
     let _classDescriptor;
@@ -55,11 +56,18 @@ let AllExceptionsFilter = (() => {
             const response = ctx.getResponse();
             const request = ctx.getRequest();
             const requestId = request.headers['x-request-id'] || '';
-            const status = exception instanceof common_1.HttpException ? exception.getStatus() : common_1.HttpStatus.INTERNAL_SERVER_ERROR;
+            let status = common_1.HttpStatus.INTERNAL_SERVER_ERROR;
             let message = 'Internal server error';
             let code = 'INTERNAL_SERVER_ERROR';
             let details = [];
-            if (exception instanceof common_1.HttpException) {
+            if (exception instanceof base_exception_1.BaseException) {
+                status = exception.status;
+                message = exception.message;
+                code = exception.code;
+                details = exception.details;
+            }
+            else if (exception instanceof common_1.HttpException) {
+                status = exception.getStatus();
                 const responseBody = exception.getResponse();
                 if (typeof responseBody === 'string') {
                     message = responseBody;

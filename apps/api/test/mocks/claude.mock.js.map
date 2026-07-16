@@ -1,0 +1,1 @@
+{"version":3,"file":"claude.mock.js","sourceRoot":"","sources":["claude.mock.ts"],"names":[],"mappings":";;;AAAA,MAAa,UAAU;IACrB,KAAK,CAAC,eAAe,CAAC,MAAc;QAClC,OAAO;YACL,UAAU,EAAE,6CAA6C,MAAM,EAAE;YACjE,KAAK,EAAE,eAAe;SACvB,CAAC;IACJ,CAAC;CACF;AAPD,gCAOC"}

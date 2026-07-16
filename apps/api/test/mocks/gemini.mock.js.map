@@ -1,0 +1,1 @@
+{"version":3,"file":"gemini.mock.js","sourceRoot":"","sources":["gemini.mock.ts"],"names":[],"mappings":";;;AAAA,MAAa,UAAU;IACrB,KAAK,CAAC,eAAe,CAAC,MAAc;QAClC,OAAO;YACL,UAAU,EAAE;gBACV,EAAE,OAAO,EAAE,EAAE,KAAK,EAAE,CAAC,EAAE,IAAI,EAAE,6CAA6C,MAAM,EAAE,EAAE,CAAC,EAAE,EAAE;aAC1F;SACF,CAAC;IACJ,CAAC;CACF;AARD,gCAQC"}

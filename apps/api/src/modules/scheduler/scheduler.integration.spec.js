@@ -1,0 +1,7 @@
+"use strict";
+describe('Scheduler Integration Tests Skeleton', () => {
+    it('compiles and validates test execution context', () => {
+        expect(true).toBe(true);
+    });
+});
+//# sourceMappingURL=scheduler.integration.spec.js.map

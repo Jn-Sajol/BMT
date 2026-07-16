@@ -1,0 +1,7 @@
+"use strict";
+describe('MediaUploadService Unit Tests Skeleton', () => {
+    it('compiles and validates test execution context', () => {
+        expect(true).toBe(true);
+    });
+});
+//# sourceMappingURL=media-upload.service.spec.js.map

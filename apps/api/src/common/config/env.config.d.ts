@@ -6,8 +6,10 @@ export declare const EnvSchema: z.ZodObject<{
     REDIS_URL: z.ZodString;
     SMTP_HOST: z.ZodDefault<z.ZodString>;
     SMTP_PORT: z.ZodDefault<z.ZodEffects<z.ZodNumber, number, unknown>>;
+    JWT_SECRET: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    NODE_ENV: "development" | "production" | "test" | "staging";
+    JWT_SECRET: string;
+    NODE_ENV: "test" | "development" | "production" | "staging";
     API_PORT: number;
     DATABASE_URL: string;
     REDIS_URL: string;
@@ -16,7 +18,8 @@ export declare const EnvSchema: z.ZodObject<{
 }, {
     DATABASE_URL: string;
     REDIS_URL: string;
-    NODE_ENV?: "development" | "production" | "test" | "staging" | undefined;
+    JWT_SECRET?: string | undefined;
+    NODE_ENV?: "test" | "development" | "production" | "staging" | undefined;
     API_PORT?: unknown;
     SMTP_HOST?: string | undefined;
     SMTP_PORT?: unknown;
