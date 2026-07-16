@@ -1,61 +1,80 @@
 "use client"
 
-import React from "react"
-
-const libraryNodes = [
-  { type: "TRIGGER", label: "CPC Spike Trigger", category: "Triggers" },
-  { type: "TRIGGER", label: "Schedule Interval", category: "Triggers" },
-  { type: "ACTION", label: "Budget Adjuster", category: "Actions" },
-  { type: "ACTION", label: "Slack Notifier", category: "Actions" },
-]
+import React, { useState } from "react"
+import { NodeRegistry } from "automation-nodes"
 
 export default function NodeLibrary() {
-  const onDragStart = (event: React.DragEvent, nodeType: string, label: string) => {
+  const [search, setSearch] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL")
+
+  const nodes = NodeRegistry.list()
+
+  // Filter definitions based on search key and selected category
+  const filteredNodes = nodes.filter((node) => {
+    const matchesSearch = node.name.toLowerCase().includes(search.toLowerCase()) ||
+                          node.provider.toLowerCase().includes(search.toLowerCase())
+    const matchesCategory = selectedCategory === "ALL" || node.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  const onDragStart = (event: React.DragEvent, nodeId: string, nodeType: string, label: string) => {
     event.dataTransfer.setData("application/reactflow-type", nodeType)
     event.dataTransfer.setData("application/reactflow-label", label)
+    event.dataTransfer.setData("application/reactflow-id", nodeId)
     event.dataTransfer.effectAllowed = "move"
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Node Catalog</h2>
+      <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Node Library SDK</h2>
       
-      <div>
-        <h3 className="text-xs font-semibold text-muted-foreground mb-2">Triggers</h3>
-        <div className="space-y-2">
-          {libraryNodes.filter((n) => n.type === "TRIGGER").map((node, i) => (
-            <div
-              key={i}
-              draggable
-              onDragStart={(e) => onDragStart(e, node.type, node.label)}
-              className="border bg-slate-900 hover:bg-slate-800 p-2.5 rounded-lg text-xs font-medium cursor-grab border-orange-500/30 text-white"
+      {/* Search and Filters */}
+      <div className="space-y-2">
+        <input
+          type="text"
+          placeholder="Search nodes..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded border border-slate-700 px-3 py-1.5 bg-slate-900 text-xs text-white"
+        />
+
+        <div className="flex space-x-1 overflow-x-auto pb-1">
+          {["ALL", "TRIGGER", "ACTION", "CONDITION", "AI"].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                selectedCategory === cat
+                  ? "bg-orange-600 border-orange-500 text-white"
+                  : "bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800"
+              }`}
             >
-              {node.label}
-            </div>
+              {cat}
+            </button>
           ))}
         </div>
       </div>
 
-      <div>
-        <h3 className="text-xs font-semibold text-muted-foreground mb-2">Actions</h3>
-        <div className="space-y-2">
-          {libraryNodes.filter((n) => n.type === "ACTION").map((node, i) => (
-            <div
-              key={i}
-              draggable
-              onDragStart={(e) => onDragStart(e, node.type, node.label)}
-              className="border bg-slate-900 hover:bg-slate-800 p-2.5 rounded-lg text-xs font-medium cursor-grab border-blue-500/30 text-white"
-            >
-              {node.label}
+      <div className="space-y-4">
+        {filteredNodes.map((node) => (
+          <div
+            key={node.id}
+            draggable
+            onDragStart={(e) => onDragStart(e, node.id, node.category, node.name)}
+            className="border bg-slate-900 hover:bg-slate-800 p-2.5 rounded-lg text-xs font-medium cursor-grab text-white flex flex-col space-y-1 border-slate-700/60"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-orange-400 font-semibold uppercase">{node.category}</span>
+              <span className="text-[9px] text-slate-500 font-mono">v{node.version}</span>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="font-bold text-white">{node.name}</div>
+            <div className="text-[10px] text-slate-400">{node.provider} Integration</div>
+          </div>
+        ))}
 
-      <div className="border border-orange-500/20 bg-orange-500/5 p-3 rounded-lg text-center mt-6">
-        <span className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
-          AI Assistant (Coming Soon)
-        </span>
+        {filteredNodes.length === 0 && (
+          <div className="text-xs text-muted-foreground text-center py-6">No matching nodes found.</div>
+        )}
       </div>
     </div>
   )
