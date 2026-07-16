@@ -13,3 +13,6 @@ NodeRegistry.register(OpenAiNodeDefinition)
 export * from "./sdk/node-definition"
 export * from "./sdk/base-node"
 export * from "./sdk/node-registry"
+export * from "./sdk/node-executor"
+export * from "./sdk/execution-context"
+export * from "./sdk/workflow-runner"
