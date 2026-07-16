@@ -17,6 +17,11 @@ export default function AdvancedLayout({ children }: { children: React.ReactNode
     router.push("/auth/login")
   }
 
+  const handleModeSwitch = () => {
+    selectMode("SAFE")
+    router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/safe/dashboard`)
+  }
+
   return (
     <div className="flex h-screen bg-background text-foreground">
       {/* 1. Sidebar */}
@@ -48,7 +53,7 @@ export default function AdvancedLayout({ children }: { children: React.ReactNode
             Workspace: {activeWorkspace?.name || "Corporate"}
           </div>
           <button
-            onClick={() => selectMode("SAFE")}
+            onClick={handleModeSwitch}
             className="w-full rounded bg-blue-600 hover:bg-blue-700 text-white py-1.5 text-xs font-semibold"
           >
             Switch to SAFE
