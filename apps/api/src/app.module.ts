@@ -23,6 +23,7 @@ import { MediaModule } from './application/media/media.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { RequestContextMiddleware } from './common/context/request-context.middleware';
 import { ObservabilityModule } from './infrastructure/observability/observability.module';
+import { WorkflowsModule } from './modules/workflows/workflows.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { ObservabilityModule } from './infrastructure/observability/observabilit
     AdModule,
     MediaModule,
     ObservabilityModule,
+    WorkflowsModule,
   ],
 })
 export class AppModule implements NestModule {
