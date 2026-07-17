@@ -375,6 +375,9 @@ importers:
       security-vault:
         specifier: workspace:*
         version: link:../security
+      zod:
+        specifier: ^3.22.0
+        version: 3.25.76
     devDependencies:
       '@types/jest':
         specifier: ^29.5.12

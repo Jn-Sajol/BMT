@@ -45,8 +45,53 @@ describe("Google Ads Integration Provider & Plugin", () => {
 
     expect(registries.providers).toContain("google")
     expect(registries.nodes).toContain("google-list-campaigns")
+    expect(registries.nodes).toContain("google-create-campaign")
 
     await plugin.stop()
     await plugin.dispose()
+  })
+
+  // --- WRITE OPERATIONS & ERROR MAPPING TESTS ---
+
+  it("should validate campaign inputs using zod schema and raise error on validation fails", async () => {
+    const client = new GoogleAdsClient("mock-token")
+    const invalidInput = { customerId: "cust-100", name: "Hi", budget: -10, status: "DRAFT", objective: "", biddingStrategy: "" }
+
+    await expect(client.createCampaign(invalidInput)).rejects.toThrow()
+  })
+
+  it("should create campaign and update budget successfully when inputs match zod schemas", async () => {
+    const client = new GoogleAdsClient("mock-token")
+    const validInput = {
+      customerId: "cust-100",
+      name: "Google Search 2026",
+      budget: 150.5,
+      status: "ENABLED" as const,
+      objective: "SALES",
+      biddingStrategy: "MANUAL_CPC",
+    }
+
+    const res = await client.createCampaign(validInput)
+    expect(res.id).toContain("camp-g-")
+    expect(res.requestId).toContain("campaign-create")
+
+    const budgetRes = await client.updateBudget(res.id, 250)
+    expect(budgetRes.success).toBe(true)
+  })
+
+  it("should map Google Ads errors into standardized platform errors", () => {
+    const err = new Error("GoogleAdsError: VALIDATION - Invalid budget input.")
+    const mapped = GoogleAdsClient.mapError(err)
+    expect(mapped).toBe("VALIDATION")
+  })
+
+  it("should execute rollback strategy generating compensating remove actions upon failure", async () => {
+    const client = new GoogleAdsClient("mock-token")
+    const campaignId = "camp-g-temp"
+
+    // Simulate rollback removal of draft campaign resource
+    const rollback = await client.removeCampaign(campaignId)
+    expect(rollback.success).toBe(true)
+    expect(rollback.requestId).toContain("campaign-remove")
   })
 })

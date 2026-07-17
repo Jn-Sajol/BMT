@@ -20,12 +20,23 @@ export class GoogleAdsPlugin implements IPlugin {
   }
 
   public async register(registries: Record<string, any>): Promise<void> {
-    // Dynamically hook nodes into Node Library
+    // Register Google provider token
     registries["providers"] = registries["providers"] || []
     registries["providers"].push("google")
 
+    // Dynamically register Google Ads write nodes
     registries["nodes"] = registries["nodes"] || []
-    registries["nodes"].push("google-list-campaigns", "google-campaign-metrics")
+    registries["nodes"].push(
+      "google-list-campaigns",
+      "google-campaign-metrics",
+      "google-create-campaign",
+      "google-update-campaign",
+      "google-pause-campaign",
+      "google-resume-campaign",
+      "google-create-adgroup",
+      "google-create-ad",
+      "google-update-budget"
+    )
   }
 
   public async start(): Promise<void> {

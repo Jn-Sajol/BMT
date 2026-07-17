@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "security-vault": "workspace:*",
-    "plugin-sdk": "workspace:*"
+    "plugin-sdk": "workspace:*",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
     "tsconfig": "workspace:*",
