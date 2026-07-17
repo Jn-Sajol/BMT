@@ -102,6 +102,9 @@ importers:
       automation-nodes:
         specifier: workspace:*
         version: link:../../packages/nodes
+      automation-providers:
+        specifier: workspace:*
+        version: link:../../packages/providers
       autoprefixer:
         specifier: ^10.4.19
         version: 10.5.3(postcss@8.5.19)
@@ -227,6 +230,28 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.25.76
+    devDependencies:
+      '@types/jest':
+        specifier: ^29.5.12
+        version: 29.5.14
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@20.19.43)
+      ts-jest:
+        specifier: ^29.1.5
+        version: 29.4.11(@babel/core@7.29.7)(jest@29.7.0)(typescript@5.9.3)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
+  packages/providers:
+    dependencies:
+      security-vault:
+        specifier: workspace:*
+        version: link:../security
     devDependencies:
       '@types/jest':
         specifier: ^29.5.12
