@@ -26,6 +26,7 @@ import { ObservabilityModule } from './infrastructure/observability/observabilit
 import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { CollaborationModule } from './modules/collaboration/collaboration.module';
 import { AIModule } from './modules/ai/ai.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { AIModule } from './modules/ai/ai.module';
     WorkflowsModule,
     CollaborationModule,
     AIModule,
+    NotificationsModule,
   ],
 })
 export class AppModule implements NestModule {

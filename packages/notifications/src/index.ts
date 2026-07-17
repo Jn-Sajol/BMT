@@ -1,0 +1,6 @@
+export * from "./core/notification.interface"
+export * from "./core/channel-registry"
+export * from "./channels/in-app.channel"
+export * from "./channels/email.channel"
+export * from "./channels/slack.channel"
+export * from "./channels/webhook.channel"
