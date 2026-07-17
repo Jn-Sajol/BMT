@@ -10,7 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "security-vault": "workspace:*"
+    "security-vault": "workspace:*",
+    "plugin-sdk": "workspace:*"
   },
   "devDependencies": {
     "tsconfig": "workspace:*",

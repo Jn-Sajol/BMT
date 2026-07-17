@@ -369,6 +369,9 @@ importers:
 
   packages/providers:
     dependencies:
+      plugin-sdk:
+        specifier: workspace:*
+        version: link:../plugins
       security-vault:
         specifier: workspace:*
         version: link:../security
