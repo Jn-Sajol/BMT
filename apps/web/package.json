@@ -30,7 +30,8 @@
     "@xyflow/react": "^12.0.4",
     "automation-nodes": "workspace:*",
     "security-vault": "workspace:*",
-    "automation-providers": "workspace:*"
+    "automation-providers": "workspace:*",
+    "ai-copilot": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",

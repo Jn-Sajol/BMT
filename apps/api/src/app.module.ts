@@ -25,6 +25,7 @@ import { RequestContextMiddleware } from './common/context/request-context.middl
 import { ObservabilityModule } from './infrastructure/observability/observability.module';
 import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { CollaborationModule } from './modules/collaboration/collaboration.module';
+import { AIModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { CollaborationModule } from './modules/collaboration/collaboration.modul
     ObservabilityModule,
     WorkflowsModule,
     CollaborationModule,
+    AIModule,
   ],
 })
 export class AppModule implements NestModule {
