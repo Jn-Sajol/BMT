@@ -3,6 +3,7 @@ import { ExecutionContext } from "../execution-context"
 import { NodeRegistry } from "../node-registry"
 import { WebhookNodeDefinition } from "../../core/webhook.node"
 import { OpenAiNodeDefinition } from "../../providers/openai.node"
+import { MetaCreateCampaignNode } from "../../providers/meta-write.node"
 
 describe("WorkflowExecutionEngine", () => {
   beforeAll(() => {
@@ -10,6 +11,7 @@ describe("WorkflowExecutionEngine", () => {
     NodeRegistry.clear()
     NodeRegistry.register(WebhookNodeDefinition)
     NodeRegistry.register(OpenAiNodeDefinition)
+    NodeRegistry.register(MetaCreateCampaignNode)
   })
 
   it("should parse trigger and workflow variables context correctly", () => {
@@ -44,6 +46,24 @@ describe("WorkflowExecutionEngine", () => {
     expect(result.status).toBe("COMPLETED")
     expect(result.nodeOutputs["node-1"].path).toBe("/events")
     expect(result.nodeOutputs["node-2"].text).toContain('prompt: "Hello /events"')
+  })
+
+  it("should successfully execute meta write nodes campaigns", async () => {
+    const nodes: RunnerNode[] = [
+      { id: "node-1", type: "meta-create-campaign", properties: { name: "Leads Q3", objective: "OUTCOME_LEADS", credentialId: "cred-oauth" } },
+    ]
+    const result = await WorkflowRunner.execute("wf-123", "exec-456", nodes, [])
+    expect(result.status).toBe("COMPLETED")
+    expect(result.nodeOutputs["node-1"].campaignId).toBe("c-mock-999")
+  })
+
+  it("should trigger compensating actions logs if meta validation fails", async () => {
+    const nodes: RunnerNode[] = [
+      { id: "node-1", type: "meta-create-campaign", properties: { name: "", objective: "OUTCOME_LEADS", credentialId: "cred-oauth" } },
+    ]
+    const result = await WorkflowRunner.execute("wf-123", "exec-456", nodes, [])
+    expect(result.status).toBe("FAILED")
+    expect(result.logs.some((l) => l.includes("[COMPENSATING_ACTION]"))).toBe(true)
   })
 
   it("should fail execution if cyclic graphs exist", async () => {

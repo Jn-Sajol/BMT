@@ -65,8 +65,14 @@ export class WorkflowRunner {
             const prompt = context.resolveVariables(node.properties.prompt)
             return { text: `AI Response for prompt: "${prompt}"` }
           }
-          if (node.type === "meta-adjust-budget") {
-            return { adjusted: true, campaign: node.properties.campaignId }
+          if (node.type === "meta-adjust-budget" || node.type === "meta-update-budget") {
+            return { adjusted: true, dailyBudget: node.properties.dailyBudget }
+          }
+          if (node.type === "meta-create-campaign") {
+            return { campaignId: "c-mock-999", name: node.properties.name }
+          }
+          if (node.type === "meta-create-ad") {
+            return { adId: "ad-mock-888", name: node.properties.name }
           }
           return { success: true }
         }, 3, 100) // 3 retries, 100ms backoff
@@ -75,6 +81,9 @@ export class WorkflowRunner {
         context.log(`Node ${node.id} executed successfully.`)
       } catch (error: any) {
         context.log(`Node ${node.id} failed execution: ${error.message}`)
+        if (node.type.startsWith("meta-")) {
+          context.log(`[COMPENSATING_ACTION] Rollback compensation suggested: Verify campaign/budget settings manually in Ads Manager for node ${node.id}.`)
+        }
         return { status: "FAILED", logs: context.logs, nodeOutputs: context.nodeOutputs }
       }
     }
