@@ -1,5 +1,6 @@
 import { Module, OnModuleInit, Inject } from '@nestjs/common';
 import { AutomationController } from './presentation/automation.controller';
+import { ExecutionMonitorController } from './presentation/execution-monitor.controller';
 import { AutomationRuleService } from './application/services/automation-rule.service';
 import { AutomationValidationService } from './application/services/automation-validation.service';
 import { AutomationEvaluator } from './application/services/automation-evaluator.service';
@@ -45,7 +46,7 @@ import { MarketplaceModule } from './marketplace/marketplace.module';
     RecommendationModule,
     MarketplaceModule,
   ],
-  controllers: [AutomationController],
+  controllers: [AutomationController, ExecutionMonitorController],
   providers: [
     AutomationRuleService,
     AutomationValidationService,
