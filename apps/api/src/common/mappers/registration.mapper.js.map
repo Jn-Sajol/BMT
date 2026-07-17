@@ -1,1 +1,0 @@
-{"version":3,"file":"registration.mapper.js","sourceRoot":"","sources":["registration.mapper.ts"],"names":[],"mappings":";;;AAGA,MAAa,kBAAkB;IAC7B,MAAM,CAAC,UAAU,CAAC,IAAU;QAC1B,OAAO;YACL,MAAM,EAAE,IAAI,CAAC,EAAE;YACf,KAAK,EAAE,IAAI,CAAC,KAAK;YACjB,MAAM,EAAE,IAAI,CAAC,MAAM;SACpB,CAAC;IACJ,CAAC;CACF;AARD,gDAQC"}
