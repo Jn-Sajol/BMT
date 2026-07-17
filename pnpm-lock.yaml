@@ -59,6 +59,9 @@ importers:
       notifications-engine:
         specifier: workspace:*
         version: link:../../packages/notifications
+      plugin-sdk:
+        specifier: workspace:*
+        version: link:../../packages/plugins
       rxjs:
         specifier: ^7.8.1
         version: 7.8.2
@@ -153,6 +156,9 @@ importers:
       notifications-engine:
         specifier: workspace:*
         version: link:../../packages/notifications
+      plugin-sdk:
+        specifier: workspace:*
+        version: link:../../packages/plugins
       postcss:
         specifier: ^8.4.39
         version: 8.5.19
@@ -306,6 +312,34 @@ importers:
         version: 5.9.3
 
   packages/notifications:
+    dependencies:
+      shared-types:
+        specifier: workspace:*
+        version: link:../shared-types
+      zod:
+        specifier: ^3.22.0
+        version: 3.25.76
+    devDependencies:
+      '@types/jest':
+        specifier: ^29.5.12
+        version: 29.5.14
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.43
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@20.19.43)
+      ts-jest:
+        specifier: ^29.1.5
+        version: 29.4.11(@babel/core@7.29.7)(jest@29.7.0)(typescript@5.9.3)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
+  packages/plugins:
     dependencies:
       shared-types:
         specifier: workspace:*

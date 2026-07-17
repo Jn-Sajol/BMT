@@ -27,6 +27,7 @@ import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { CollaborationModule } from './modules/collaboration/collaboration.module';
 import { AIModule } from './modules/ai/ai.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PluginsModule } from './modules/plugins/plugins.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     CollaborationModule,
     AIModule,
     NotificationsModule,
+    PluginsModule,
   ],
 })
 export class AppModule implements NestModule {

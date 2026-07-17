@@ -32,7 +32,8 @@
     "security-vault": "workspace:*",
     "automation-providers": "workspace:*",
     "ai-copilot": "workspace:*",
-    "notifications-engine": "workspace:*"
+    "notifications-engine": "workspace:*",
+    "plugin-sdk": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",
