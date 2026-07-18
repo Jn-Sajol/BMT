@@ -28,6 +28,12 @@ import { CollaborationModule } from './modules/collaboration/collaboration.modul
 import { AIModule } from './modules/ai/ai.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PluginsModule } from './modules/plugins/plugins.module';
+import { LibraryModule } from './modules/library/library.module';
+import { ClickableImageModule } from './modules/clickable-image/clickable-image.module';
+import { LandingPageModule } from './modules/landing-page/landing-page.module';
+import { ViralContentModule } from './modules/viral-content/viral-content.module';
+import { DownloaderModule } from './modules/downloader/downloader.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -58,6 +64,12 @@ import { PluginsModule } from './modules/plugins/plugins.module';
     AIModule,
     NotificationsModule,
     PluginsModule,
+    LibraryModule,
+    ClickableImageModule,
+    LandingPageModule,
+    ViralContentModule,
+    DownloaderModule,
+    DashboardModule,
   ],
 })
 export class AppModule implements NestModule {
