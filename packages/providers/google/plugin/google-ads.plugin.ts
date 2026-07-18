@@ -37,6 +37,17 @@ export class GoogleAdsPlugin implements IPlugin {
       "google-create-ad",
       "google-update-budget"
     )
+
+    // Dynamically register Google Ads trigger nodes
+    registries["triggers"] = registries["triggers"] || []
+    registries["triggers"].push(
+      "google-campaign-updated-trigger",
+      "google-campaign-removed-trigger",
+      "google-conversion-imported-trigger",
+      "google-audience-synced-trigger",
+      "google-budget-changed-trigger",
+      "google-ad-disapproved-trigger"
+    )
   }
 
   public async start(): Promise<void> {

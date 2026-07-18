@@ -35,9 +35,9 @@ describe("Google Ads Integration Provider & Plugin", () => {
     expect(metrics.impressions).toBe(45000)
   })
 
-  it("should dynamically register google nodes into library registries", async () => {
+  it("should dynamically register google nodes and triggers into library registries", async () => {
     const plugin = new GoogleAdsPlugin()
-    const registries = { nodes: [], providers: [] }
+    const registries = { nodes: [], triggers: [], providers: [] }
 
     await plugin.initialize()
     await plugin.register(registries)
@@ -46,6 +46,7 @@ describe("Google Ads Integration Provider & Plugin", () => {
     expect(registries.providers).toContain("google")
     expect(registries.nodes).toContain("google-list-campaigns")
     expect(registries.nodes).toContain("google-create-campaign")
+    expect(registries.triggers).toContain("google-campaign-updated-trigger")
 
     await plugin.stop()
     await plugin.dispose()
@@ -89,9 +90,47 @@ describe("Google Ads Integration Provider & Plugin", () => {
     const client = new GoogleAdsClient("mock-token")
     const campaignId = "camp-g-temp"
 
-    // Simulate rollback removal of draft campaign resource
     const rollback = await client.removeCampaign(campaignId)
     expect(rollback.success).toBe(true)
     expect(rollback.requestId).toContain("campaign-remove")
+  })
+
+  // --- EVENTS, CONVERSIONS & AUDIENCES TESTS ---
+
+  it("should upload offline conversions and support GCLID and order tracking", async () => {
+    const client = new GoogleAdsClient("mock-token")
+    const res = await client.uploadConversion("gclid-100", "order-999", 500)
+    expect(res.success).toBe(true)
+    expect(res.requestId).toContain("conversion-upload")
+  })
+
+  it("should synchronize customer matches and audience list memberships", async () => {
+    const client = new GoogleAdsClient("mock-token")
+    const res = await client.syncAudience("VIP-List", ["user@corp.com"])
+    expect(res.success).toBe(true)
+    expect(res.requestId).toContain("audience-sync")
+  })
+
+  it("should execute batch mutations and identify partial execution failures", async () => {
+    const client = new GoogleAdsClient("mock-token")
+    const operations = [
+      { action: "CREATE", name: "Valid Batch" },
+      { action: "CREATE", name: "Broken Batch", fail: true },
+    ]
+
+    const batchRes = await client.batchMutate(operations)
+    expect(batchRes.success).toBe(false) // failed due to row 2
+    expect(batchRes.results[0].success).toBe(true)
+    expect(batchRes.results[1].success).toBe(false)
+  })
+
+  it("should normalize raw inputs according to provider event source abstraction", () => {
+    const client = new GoogleAdsClient("mock-token")
+    const raw = { id: "evt-google-1", type: "google.campaign.disapproved", data: { campaignId: "camp-g-1" } }
+
+    const normalized = client.normalizeEvent(raw, "webhook")
+    expect(normalized.eventId).toBe("evt-google-1")
+    expect(normalized.sourceType).toBe("webhook")
+    expect(normalized.eventType).toBe("google.campaign.disapproved")
   })
 })

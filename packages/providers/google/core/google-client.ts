@@ -11,6 +11,15 @@ export const CampaignInputSchema = z.object({
   currency: z.string().default("USD"),
 })
 
+export interface NormalizedGoogleEvent {
+  eventId: string
+  sourceType: "polling" | "webhook" | "scheduled-sync" | "batch-import"
+  eventType: string
+  workspaceId: string
+  timestamp: string
+  payload: Record<string, any>
+}
+
 export class GoogleAdsClient {
   constructor(private readonly accessToken: string) {}
 
@@ -51,7 +60,6 @@ export class GoogleAdsClient {
   // --- WRITE OPERATIONS ---
 
   public async createCampaign(input: any): Promise<{ id: string; requestId: string }> {
-    // 1. Zod input validation
     const parsed = CampaignInputSchema.parse(input)
     console.log(`[GoogleAdsClient] Creating campaign: ${parsed.name}`)
     return {
@@ -133,6 +141,64 @@ export class GoogleAdsClient {
     return {
       success: true,
       requestId: `req-${Date.now()}-budget-update`,
+    }
+  }
+
+  // --- EVENTS & CONVERSION INTELLIGENCE ---
+
+  public async uploadConversion(
+    gclid: string,
+    orderId: string,
+    value: number
+  ): Promise<{ success: boolean; requestId: string }> {
+    console.log(`[GoogleAdsClient] Uploading offline conversion GCLID: ${gclid}, Order: ${orderId}`)
+    return {
+      success: true,
+      requestId: `req-${Date.now()}-conversion-upload`,
+    }
+  }
+
+  public async syncAudience(
+    listName: string,
+    emails: string[]
+  ): Promise<{ success: boolean; requestId: string }> {
+    console.log(`[GoogleAdsClient] Syncing customer match audience list: ${listName} with ${emails.length} entries`)
+    return {
+      success: true,
+      requestId: `req-${Date.now()}-audience-sync`,
+    }
+  }
+
+  public async batchMutate(
+    operations: any[]
+  ): Promise<{ success: boolean; results: any[]; requestId: string }> {
+    console.log(`[GoogleAdsClient] Processing batch mutation operation list containing ${operations.length} rows`)
+    
+    // Partial Failure Detection
+    const results = operations.map((op, idx) => {
+      if (op.fail) {
+        return { index: idx, success: false, error: "VALIDATION - Field constraint mismatch." }
+      }
+      return { index: idx, success: true, resourceId: `batch-g-${idx}` }
+    })
+
+    return {
+      success: results.every((r) => r.success),
+      results,
+      requestId: `req-${Date.now()}-batch-mutate`,
+    }
+  }
+
+  // --- EVENT SOURCE ABSTRACTION ---
+
+  public normalizeEvent(raw: any, sourceType: "polling" | "webhook" | "scheduled-sync" | "batch-import"): NormalizedGoogleEvent {
+    return {
+      eventId: raw.id || `evt-${Date.now()}`,
+      sourceType,
+      eventType: raw.type || "google.campaign.updated",
+      workspaceId: raw.workspaceId || "ws-1",
+      timestamp: new Date().toISOString(),
+      payload: raw.data || {},
     }
   }
 
