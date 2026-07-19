@@ -43,6 +43,7 @@ import { MessengerControllerModule } from './modules/messenger-controller/messen
 import { MessengerGroupsModule } from './modules/messenger-groups/messenger-groups.module';
 import { FriendManagementModule } from './modules/friend-management/friend-management.module';
 import { LinkCommentModule } from './modules/link-comment/link-comment.module';
+import { GroupHunterModule } from './modules/group-hunter/group-hunter.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { LinkCommentModule } from './modules/link-comment/link-comment.module';
     MessengerGroupsModule,
     FriendManagementModule,
     LinkCommentModule,
+    GroupHunterModule,
   ],
 })
 export class AppModule implements NestModule {
