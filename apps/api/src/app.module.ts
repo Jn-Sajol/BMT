@@ -34,6 +34,8 @@ import { LandingPageModule } from './modules/landing-page/landing-page.module';
 import { ViralContentModule } from './modules/viral-content/viral-content.module';
 import { DownloaderModule } from './modules/downloader/downloader.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { FacebookConnectModule } from './modules/facebook-connect/facebook-connect.module';
+import { FacebookMarketModule } from './modules/facebook-market/facebook-market.module';
 
 @Module({
   imports: [
@@ -70,6 +72,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     ViralContentModule,
     DownloaderModule,
     DashboardModule,
+    FacebookConnectModule,
+    FacebookMarketModule,
   ],
 })
 export class AppModule implements NestModule {
