@@ -39,6 +39,7 @@ import { FacebookMarketModule } from './modules/facebook-market/facebook-market.
 import { FacebookGroupsModule } from './modules/facebook-groups/facebook-groups.module';
 import { PublicCommentModule } from './modules/public-comment/public-comment.module';
 import { CommentReplyModule } from './modules/comment-reply/comment-reply.module';
+import { MessengerControllerModule } from './modules/messenger-controller/messenger-controller.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { CommentReplyModule } from './modules/comment-reply/comment-reply.module
     FacebookGroupsModule,
     PublicCommentModule,
     CommentReplyModule,
+    MessengerControllerModule,
   ],
 })
 export class AppModule implements NestModule {
