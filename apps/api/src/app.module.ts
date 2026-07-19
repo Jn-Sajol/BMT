@@ -37,6 +37,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FacebookConnectModule } from './modules/facebook-connect/facebook-connect.module';
 import { FacebookMarketModule } from './modules/facebook-market/facebook-market.module';
 import { FacebookGroupsModule } from './modules/facebook-groups/facebook-groups.module';
+import { PublicCommentModule } from './modules/public-comment/public-comment.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { FacebookGroupsModule } from './modules/facebook-groups/facebook-groups.
     FacebookConnectModule,
     FacebookMarketModule,
     FacebookGroupsModule,
+    PublicCommentModule,
   ],
 })
 export class AppModule implements NestModule {
