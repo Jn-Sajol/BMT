@@ -42,6 +42,7 @@ import { CommentReplyModule } from './modules/comment-reply/comment-reply.module
 import { MessengerControllerModule } from './modules/messenger-controller/messenger-controller.module';
 import { MessengerGroupsModule } from './modules/messenger-groups/messenger-groups.module';
 import { FriendManagementModule } from './modules/friend-management/friend-management.module';
+import { LinkCommentModule } from './modules/link-comment/link-comment.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { FriendManagementModule } from './modules/friend-management/friend-manag
     MessengerControllerModule,
     MessengerGroupsModule,
     FriendManagementModule,
+    LinkCommentModule,
   ],
 })
 export class AppModule implements NestModule {
