@@ -46,6 +46,7 @@ import { LinkCommentModule } from './modules/link-comment/link-comment.module';
 import { GroupHunterModule } from './modules/group-hunter/group-hunter.module';
 import { MessengerLinkModule } from './modules/messenger-link/messenger-link.module';
 import { DataCollectorModule } from './modules/data-collector/data-collector.module';
+import { InstagramModule } from './modules/instagram/instagram.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { DataCollectorModule } from './modules/data-collector/data-collector.mod
     GroupHunterModule,
     MessengerLinkModule,
     DataCollectorModule,
+    InstagramModule,
   ],
 })
 export class AppModule implements NestModule {
