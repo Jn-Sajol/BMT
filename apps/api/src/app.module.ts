@@ -48,6 +48,7 @@ import { MessengerLinkModule } from './modules/messenger-link/messenger-link.mod
 import { DataCollectorModule } from './modules/data-collector/data-collector.module';
 import { InstagramModule } from './modules/instagram/instagram.module';
 import { YouTubeModule } from './modules/youtube/youtube.module';
+import { AutomationCoreModule } from './modules/automation-core/automation-core.module';
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import { YouTubeModule } from './modules/youtube/youtube.module';
     DataCollectorModule,
     InstagramModule,
     YouTubeModule,
+    AutomationCoreModule,
   ],
 })
 export class AppModule implements NestModule {
