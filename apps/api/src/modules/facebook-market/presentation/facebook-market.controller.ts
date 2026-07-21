@@ -4,6 +4,7 @@ import { SchedulerService } from "../application/services/scheduler.service"
 import { PublishingService } from "../application/services/publishing.service"
 import { CalendarService } from "../application/services/calendar.service"
 import { ReportService } from "../application/services/report.service"
+import { MarketAutomationService } from "../application/services/market-automation.service"
 import { PostAsset } from "../domain/post-asset.model"
 import { PostTarget } from "../domain/post-target.model"
 
@@ -14,7 +15,8 @@ export class FacebookMarketController {
     private readonly schedulerService: SchedulerService,
     private readonly publishingService: PublishingService,
     private readonly calendarService: CalendarService,
-    private readonly reportService: ReportService
+    private readonly reportService: ReportService,
+    private readonly marketAutomationService: MarketAutomationService
   ) {}
 
   @Get("posts")
@@ -93,5 +95,31 @@ export class FacebookMarketController {
   @Get("reports")
   public async getReports() {
     return this.reportService.getReports()
+  }
+
+  @Post("automation/start")
+  public async startAutomation(@Body("title") title: string, @Body("payload") payload: any) {
+    return this.marketAutomationService.startAutomation(title, payload)
+  }
+
+  @Post("automation/stop")
+  public async stopAutomation() {
+    await this.marketAutomationService.stopAutomation()
+    return { success: true }
+  }
+
+  @Get("automation/jobs")
+  public async getAutomationJobs() {
+    return this.marketAutomationService.getReports()
+  }
+
+  @Get("automation/report")
+  public async getAutomationReport() {
+    const reports = await this.marketAutomationService.getReports()
+    return {
+      totalRuns: reports.length,
+      successRuns: reports.filter((r) => r.status === "Completed").length,
+      failedRuns: reports.filter((r) => r.status === "Failed").length,
+    }
   }
 }

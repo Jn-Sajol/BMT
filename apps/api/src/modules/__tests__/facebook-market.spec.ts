@@ -13,6 +13,8 @@ import { ReportRepository } from "../facebook-market/infrastructure/report.repos
 import { PublishingService } from "../facebook-market/application/services/publishing.service"
 import { CalendarService } from "../facebook-market/application/services/calendar.service"
 import { ReportService } from "../facebook-market/application/services/report.service"
+import { MarketAutomationService } from "../facebook-market/application/services/market-automation.service"
+import { PostPreparationWorker, SchedulerWorker, VerificationWorker, ReportingWorker } from "../facebook-market/application/services/workers.service"
 import { FacebookMarketController } from "../facebook-market/presentation/facebook-market.controller"
 
 describe("Facebook Connect & Market (F-23 & F-24) Unit Tests", () => {
@@ -59,7 +61,13 @@ describe("Facebook Connect & Market (F-23 & F-24) Unit Tests", () => {
     const calService = new CalendarService(schedRepo, postRepo)
     const reportService = new ReportService(reportRepo)
 
-    const controller = new FacebookMarketController(postService, schedService, pubService, calService, reportService)
+    const prep = new PostPreparationWorker()
+    const schedW = new SchedulerWorker()
+    const verif = new VerificationWorker()
+    const repW = new ReportingWorker()
+    const autoService = new MarketAutomationService(prep, schedW, verif, repW)
+
+    const controller = new FacebookMarketController(postService, schedService, pubService, calService, reportService, autoService)
 
     const post = await controller.create(
       "Black Friday Ad",
