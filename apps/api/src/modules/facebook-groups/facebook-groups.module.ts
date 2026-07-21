@@ -5,6 +5,8 @@ import { FacebookGroupsSyncService } from "./application/services/facebook-group
 import { GroupSchedulerService } from "./application/services/group-scheduler.service"
 import { GroupPublishingService } from "./application/services/group-publishing.service"
 import { GroupAdvancedExecutionStrategy } from "./application/services/group-execution-strategy.service"
+import { GroupStateMachineService } from "./application/services/group-state-machine.service"
+import { GroupExecutionCoordinatorService } from "./application/services/group-execution-coordinator.service"
 import { FacebookGroupRepository } from "./infrastructure/facebook-group.repository"
 import { GroupScheduleRepository } from "./infrastructure/group-schedule.repository"
 import { GroupPublishRepository } from "./infrastructure/group-publish.repository"
@@ -17,6 +19,8 @@ import { GroupPublishRepository } from "./infrastructure/group-publish.repositor
     GroupSchedulerService,
     GroupPublishingService,
     GroupAdvancedExecutionStrategy,
+    GroupStateMachineService,
+    GroupExecutionCoordinatorService,
     FacebookGroupRepository,
     GroupScheduleRepository,
     GroupPublishRepository,
@@ -26,6 +30,8 @@ import { GroupPublishRepository } from "./infrastructure/group-publish.repositor
     GroupSchedulerService,
     GroupPublishingService,
     GroupAdvancedExecutionStrategy,
+    GroupStateMachineService,
+    GroupExecutionCoordinatorService,
     FacebookGroupRepository,
     GroupScheduleRepository,
     GroupPublishRepository,
