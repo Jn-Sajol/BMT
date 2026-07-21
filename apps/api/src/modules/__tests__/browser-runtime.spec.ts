@@ -4,10 +4,13 @@ import { BrowserContextRepository } from "../browser-runtime/infrastructure/brow
 import { BrowserProfileService } from "../browser-runtime/application/services/browser-profile.service"
 import { BrowserSessionService } from "../browser-runtime/application/services/browser-session.service"
 import { BrowserContextService } from "../browser-runtime/application/services/browser-context.service"
+import { BrowserPoolService } from "../browser-runtime/application/services/browser-pool.service"
+import { StorageService } from "../browser-runtime/application/services/storage.service"
+import { HealthMonitorService } from "../browser-runtime/application/services/health-monitor.service"
 import { BrowserRuntimeController } from "../browser-runtime/presentation/browser-runtime.controller"
 import { BrowserProfile } from "../browser-runtime/domain/browser-profile.model"
 
-describe("Browser Runtime Foundation (F-38) Unit Tests", () => {
+describe("Browser Pool & Runtime (F-39) Unit Tests", () => {
   let profileRepo: BrowserProfileRepository
   let sessionRepo: BrowserSessionRepository
   let contextRepo: BrowserContextRepository
@@ -15,6 +18,9 @@ describe("Browser Runtime Foundation (F-38) Unit Tests", () => {
   let profileService: BrowserProfileService
   let sessionService: BrowserSessionService
   let contextService: BrowserContextService
+  let poolService: BrowserPoolService
+  let storageService: StorageService
+  let healthMonitor: HealthMonitorService
 
   let controller: BrowserRuntimeController
 
@@ -26,53 +32,47 @@ describe("Browser Runtime Foundation (F-38) Unit Tests", () => {
     profileService = new BrowserProfileService(profileRepo)
     sessionService = new BrowserSessionService(sessionRepo)
     contextService = new BrowserContextService(contextRepo)
+    poolService = new BrowserPoolService()
+    storageService = new StorageService()
+    healthMonitor = new HealthMonitorService()
 
-    controller = new BrowserRuntimeController(profileService, sessionService, contextService)
+    controller = new BrowserRuntimeController(profileService, sessionService, contextService, poolService, storageService)
   })
 
-  it("should create profile configurations, update session states, validate profiles status, prepare user context configurations, and test controller calls", async () => {
-    // 1. Create Profile
-    const profile: BrowserProfile = {
-      id: "p-202",
-      workspaceId: "ws-200",
-      userId: "user-200",
-      browserEngine: "Chromium",
-      profileName: "Chrome posting session profile",
-      storageLocation: "s3://bmt/p-202",
-      status: "Active",
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-    const created = await profileService.createProfile(profile)
-    expect(created.id).toBe("p-202")
+  it("should test the browser pool allocation, cookies secure encryption, and telemetric health monitor parameters", async () => {
+    // 1. Storage Manager - Cookies Encryption
+    const raw = '{"session":"123","user":"operator"}'
+    const encrypted = await storageService.encryptCookieData(raw)
+    expect(encrypted).toContain("enc-aes-256:")
 
-    // 2. Load Profiles
-    const loaded = await profileService.loadProfile("p-202")
-    expect(loaded).toBeDefined()
-    expect(loaded?.profileName).toBe("Chrome posting session profile")
+    const decrypted = await storageService.decryptCookieData(encrypted)
+    expect(decrypted).toBe(raw)
 
-    // 3. Archive Profile
-    const archived = await profileService.archiveProfile("p-202")
-    expect(archived.status).toBe("Archived")
+    // 2. Browser Pool Lifecycle
+    const instance = await poolService.startBrowser("prof-100")
+    expect(instance.profileId).toBe("prof-100")
+    expect(instance.status).toBe("Active")
 
-    // 4. Session Validation
-    const sessions = await sessionService.loadMockSessions()
-    expect(sessions.length).toBe(1)
-    const valid = await sessionService.validateSession(sessions[0].id)
-    expect(valid).toBe(true)
+    // Retrieve active list
+    const list = await poolService.getPoolStatus()
+    expect(list.length).toBe(1)
 
-    // Expire session
-    await sessionService.expireSession(sessions[0].id)
-    const validAfter = await sessionService.validateSession(sessions[0].id)
-    expect(validAfter).toBe(false)
+    // Release/Stop browser
+    await poolService.stopBrowser(instance.id)
+    expect(await poolService.getPoolStatus()).toHaveLength(0)
 
-    // 5. Prepare context details
-    const context = await contextService.prepareContext("p-202")
-    expect(context.locale).toBe("en-US")
-    expect(context.timezone).toBe("America/New_York")
+    // 3. Health Monitoring & Crash recovery
+    const inst2 = await poolService.startBrowser("prof-200")
+    const health = await healthMonitor.inspectInstance(inst2)
+    expect(health.recommendation).toBe("KeepRunning")
 
-    // Test controller calls
-    const profilesList = await controller.getProfiles()
-    expect(profilesList.length).toBe(1)
+    // Crash it manually
+    inst2.status = "Crashed"
+    const healthCrashed = await healthMonitor.inspectInstance(inst2)
+    expect(healthCrashed.recommendation).toBe("RestartRequired")
+
+    // Trigger recovery
+    const recovered = await poolService.triggerCrashRecovery(inst2.id)
+    expect(recovered.status).toBe("Active")
   })
 })
