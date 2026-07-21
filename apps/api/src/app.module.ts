@@ -49,6 +49,7 @@ import { DataCollectorModule } from './modules/data-collector/data-collector.mod
 import { InstagramModule } from './modules/instagram/instagram.module';
 import { YouTubeModule } from './modules/youtube/youtube.module';
 import { AutomationCoreModule } from './modules/automation-core/automation-core.module';
+import { BrowserRuntimeModule } from './modules/browser-runtime/browser-runtime.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { AutomationCoreModule } from './modules/automation-core/automation-core.
     InstagramModule,
     YouTubeModule,
     AutomationCoreModule,
+    BrowserRuntimeModule,
   ],
 })
 export class AppModule implements NestModule {
