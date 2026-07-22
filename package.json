@@ -11,8 +11,8 @@
     "test": "turbo run test"
   },
   "devDependencies": {
-    "prettier": "^3.0.0",
-    "turbo": "^1.10.0"
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.5"
   },
   "packageManager": "pnpm@8.15.0"
 }

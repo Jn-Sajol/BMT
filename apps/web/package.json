@@ -9,24 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "^15.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "next": "^16.2.11",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "zustand": "^5.0.0",
     "axios": "^1.7.2",
-    "@tanstack/react-query": "^5.51.1",
-    "zod": "^3.23.8",
-    "react-hook-form": "^7.52.1",
-    "@hookform/resolvers": "^3.9.0",
-    "framer-motion": "^11.3.8",
-    "lucide-react": "^0.412.0",
+    "@tanstack/react-query": "^5.101.4",
+    "zod": "^4.4.3",
+    "react-hook-form": "^7.82.0",
+    "@hookform/resolvers": "^5.4.0",
+    "framer-motion": "^12.42.2",
+    "lucide-react": "^1.25.0",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.4.0",
+    "tailwind-merge": "^3.6.0",
     "class-variance-authority": "^0.7.0",
     "shared-types": "workspace:*",
-    "tailwindcss": "^3.4.4",
-    "postcss": "^8.4.39",
-    "autoprefixer": "^10.4.19",
+    "tailwindcss": "^4.3.3",
+    "postcss": "^8.5.22",
+    "autoprefixer": "^10.5.4",
     "@xyflow/react": "^12.0.4",
     "automation-nodes": "workspace:*",
     "security-vault": "workspace:*",
@@ -36,11 +36,11 @@
     "plugin-sdk": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20.14.9",
+    "@types/node": "^26.1.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*",
-    "typescript": "^5.5.2"
+    "typescript": "^7.0.2"
   }
 }
