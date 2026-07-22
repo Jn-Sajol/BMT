@@ -9,6 +9,12 @@ import { CommentBlockJobCoordinator } from "./application/services/comment-block
 import { CommentCollectionExecutionStrategy } from "./application/services/comment-collection-execution-strategy.service"
 import { CommentCollectionStateMachine } from "./application/services/comment-collection-state-machine.service"
 import { CommentCollectionJobCoordinator } from "./application/services/comment-collection-job-coordinator.service"
+import { CommentProcessingService } from "./application/services/comment-processing.service"
+import { LeadScoreService } from "./application/services/lead-score.service"
+import { LeadCandidateBuilder } from "./application/services/lead-candidate-builder.service"
+import { CommentProcessingExecutionStrategy } from "./application/services/comment-processing-execution-strategy.service"
+import { CommentProcessingStateMachine } from "./application/services/comment-processing-state-machine.service"
+import { CommentProcessingJobCoordinator } from "./application/services/comment-processing-job-coordinator.service"
 import { LinkCommentRepository } from "./infrastructure/link-comment.repository"
 import { CommentHistoryRepository } from "./infrastructure/comment-history.repository"
 import { AutomationCoreModule } from "../automation-core/automation-core.module"
@@ -30,6 +36,12 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     CommentCollectionExecutionStrategy,
     CommentCollectionStateMachine,
     CommentCollectionJobCoordinator,
+    CommentProcessingService,
+    LeadScoreService,
+    LeadCandidateBuilder,
+    CommentProcessingExecutionStrategy,
+    CommentProcessingStateMachine,
+    CommentProcessingJobCoordinator,
     LinkCommentRepository,
     CommentHistoryRepository,
   ],
@@ -43,6 +55,12 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     CommentCollectionExecutionStrategy,
     CommentCollectionStateMachine,
     CommentCollectionJobCoordinator,
+    CommentProcessingService,
+    LeadScoreService,
+    LeadCandidateBuilder,
+    CommentProcessingExecutionStrategy,
+    CommentProcessingStateMachine,
+    CommentProcessingJobCoordinator,
     LinkCommentRepository,
     CommentHistoryRepository,
   ],
@@ -54,7 +72,9 @@ export class LinkCommentModule implements OnModuleInit {
     private readonly blockStrategy: CommentBlockExecutionStrategy,
     private readonly blockCoordinator: CommentBlockJobCoordinator,
     private readonly collectionStrategy: CommentCollectionExecutionStrategy,
-    private readonly collectionCoordinator: CommentCollectionJobCoordinator
+    private readonly collectionCoordinator: CommentCollectionJobCoordinator,
+    private readonly processingStrategy: CommentProcessingExecutionStrategy,
+    private readonly processingCoordinator: CommentProcessingJobCoordinator
   ) {}
 
   onModuleInit() {
@@ -92,7 +112,25 @@ export class LinkCommentModule implements OnModuleInit {
       report: async () => {}
     }
 
+    const processingPlugin: AutomationPlugin = {
+      metadata: {
+        id: "fb-comment-processing-plugin",
+        name: "Facebook Comment Processing & Lead Extraction Foundation",
+        version: "1.0.0",
+        description: "Processing and AI lead extraction foundation for Facebook comment batches",
+        platform: "facebook"
+      },
+      driver: this.facebookDriver,
+      capabilities: [AutomationCapability.COMMENT_PROCESSING],
+      executionStrategy: this.processingStrategy,
+      jobCoordinator: this.processingCoordinator,
+      isEnabled: true,
+      verify: async () => ({ status: "Success", verifiedAt: new Date() }),
+      report: async () => {}
+    }
+
     this.registryService.registerPlugin(blockPlugin)
     this.registryService.registerPlugin(collectionPlugin)
+    this.registryService.registerPlugin(processingPlugin)
   }
 }
