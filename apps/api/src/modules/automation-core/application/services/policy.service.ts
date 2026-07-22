@@ -19,7 +19,8 @@ export class PolicyService {
       { platform: "facebook", action: "unfriend", isEnabled: true },
       { platform: "facebook", action: "group_discovery", isEnabled: true },
       { platform: "facebook", action: "group_autojoin", isEnabled: true },
-      { platform: "facebook", action: "comment_block_discovery", isEnabled: true }
+      { platform: "facebook", action: "comment_block_discovery", isEnabled: true },
+      { platform: "facebook", action: "comment_collection", isEnabled: true }
     )
   }
 

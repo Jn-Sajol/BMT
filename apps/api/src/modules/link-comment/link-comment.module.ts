@@ -6,6 +6,9 @@ import { CommentTargetParserService } from "./application/services/comment-targe
 import { CommentBlockExecutionStrategy } from "./application/services/comment-block-execution-strategy.service"
 import { CommentBlockStateMachine } from "./application/services/comment-block-state-machine.service"
 import { CommentBlockJobCoordinator } from "./application/services/comment-block-job-coordinator.service"
+import { CommentCollectionExecutionStrategy } from "./application/services/comment-collection-execution-strategy.service"
+import { CommentCollectionStateMachine } from "./application/services/comment-collection-state-machine.service"
+import { CommentCollectionJobCoordinator } from "./application/services/comment-collection-job-coordinator.service"
 import { LinkCommentRepository } from "./infrastructure/link-comment.repository"
 import { CommentHistoryRepository } from "./infrastructure/comment-history.repository"
 import { AutomationCoreModule } from "../automation-core/automation-core.module"
@@ -24,6 +27,9 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     CommentBlockExecutionStrategy,
     CommentBlockStateMachine,
     CommentBlockJobCoordinator,
+    CommentCollectionExecutionStrategy,
+    CommentCollectionStateMachine,
+    CommentCollectionJobCoordinator,
     LinkCommentRepository,
     CommentHistoryRepository,
   ],
@@ -34,6 +40,9 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     CommentBlockExecutionStrategy,
     CommentBlockStateMachine,
     CommentBlockJobCoordinator,
+    CommentCollectionExecutionStrategy,
+    CommentCollectionStateMachine,
+    CommentCollectionJobCoordinator,
     LinkCommentRepository,
     CommentHistoryRepository,
   ],
@@ -42,12 +51,14 @@ export class LinkCommentModule implements OnModuleInit {
   constructor(
     private readonly registryService: AutomationRegistryService,
     private readonly facebookDriver: FacebookDriver,
-    private readonly executionStrategy: CommentBlockExecutionStrategy,
-    private readonly jobCoordinator: CommentBlockJobCoordinator
+    private readonly blockStrategy: CommentBlockExecutionStrategy,
+    private readonly blockCoordinator: CommentBlockJobCoordinator,
+    private readonly collectionStrategy: CommentCollectionExecutionStrategy,
+    private readonly collectionCoordinator: CommentCollectionJobCoordinator
   ) {}
 
   onModuleInit() {
-    const plugin: AutomationPlugin = {
+    const blockPlugin: AutomationPlugin = {
       metadata: {
         id: "fb-comment-block-plugin",
         name: "Facebook Comment Block Scraper Foundation",
@@ -57,13 +68,31 @@ export class LinkCommentModule implements OnModuleInit {
       },
       driver: this.facebookDriver,
       capabilities: [AutomationCapability.COMMENT_BLOCK_DISCOVERY],
-      executionStrategy: this.executionStrategy,
-      jobCoordinator: this.jobCoordinator,
+      executionStrategy: this.blockStrategy,
+      jobCoordinator: this.blockCoordinator,
       isEnabled: true,
       verify: async () => ({ status: "Success", verifiedAt: new Date() }),
       report: async () => {}
     }
 
-    this.registryService.registerPlugin(plugin)
+    const collectionPlugin: AutomationPlugin = {
+      metadata: {
+        id: "fb-comment-collection-plugin",
+        name: "Facebook Comment Collection Orchestration",
+        version: "1.0.0",
+        description: "Execution orchestration pipeline for Facebook comment collection",
+        platform: "facebook"
+      },
+      driver: this.facebookDriver,
+      capabilities: [AutomationCapability.COMMENT_COLLECTION],
+      executionStrategy: this.collectionStrategy,
+      jobCoordinator: this.collectionCoordinator,
+      isEnabled: true,
+      verify: async () => ({ status: "Success", verifiedAt: new Date() }),
+      report: async () => {}
+    }
+
+    this.registryService.registerPlugin(blockPlugin)
+    this.registryService.registerPlugin(collectionPlugin)
   }
 }
