@@ -6,6 +6,9 @@ import { FeatureFlagService } from "./application/services/feature-flag.service"
 import { PolicyService } from "./application/services/policy.service"
 import { ExecutionEngineService } from "./application/services/execution-engine.service"
 import { SchedulerService } from "./application/services/scheduler.service"
+import { DelayCalculatorService } from "./application/services/delay-calculator.service"
+import { AutomationMetricsService } from "./application/services/automation-metrics.service"
+import { AutomationPipelineService } from "./application/services/automation-pipeline.service"
 
 @Module({
   controllers: [AutomationCoreController],
@@ -16,6 +19,9 @@ import { SchedulerService } from "./application/services/scheduler.service"
     PolicyService,
     ExecutionEngineService,
     SchedulerService,
+    DelayCalculatorService,
+    AutomationMetricsService,
+    AutomationPipelineService,
   ],
   exports: [
     BullMQQueueAdapter,
@@ -24,6 +30,9 @@ import { SchedulerService } from "./application/services/scheduler.service"
     PolicyService,
     ExecutionEngineService,
     SchedulerService,
+    DelayCalculatorService,
+    AutomationMetricsService,
+    AutomationPipelineService,
   ],
 })
 export class AutomationCoreModule {}

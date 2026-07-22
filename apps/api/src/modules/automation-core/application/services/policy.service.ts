@@ -6,11 +6,22 @@ export class PolicyService {
   private capabilities: ProviderCapability[] = []
 
   constructor() {
-    // Register allowed capabilities
+    // Register default allowed capabilities
     this.capabilities.push(
       { platform: "facebook", action: "post_group", isEnabled: true },
-      { platform: "facebook", action: "market_list", isEnabled: true }
+      { platform: "facebook", action: "market_list", isEnabled: true },
+      { platform: "facebook", action: "marketplace_post", isEnabled: true },
+      { platform: "facebook", action: "comment_post", isEnabled: true },
+      { platform: "facebook", action: "comment_reply", isEnabled: true },
+      { platform: "facebook", action: "messenger_reply", isEnabled: true },
+      { platform: "facebook", action: "group_messenger_post", isEnabled: true },
+      { platform: "facebook", action: "friend_request", isEnabled: true },
+      { platform: "facebook", action: "unfriend", isEnabled: true }
     )
+  }
+
+  public registerCapability(capability: ProviderCapability): void {
+    this.capabilities.push(capability)
   }
 
   public async validatePolicy(platform: string, action: string, accountHealthScore: number): Promise<{ allowed: boolean; reason?: string }> {
