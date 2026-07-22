@@ -5,8 +5,12 @@ import { PolicyService } from "../automation-core/application/services/policy.se
 import { DelayCalculatorService } from "../automation-core/application/services/delay-calculator.service"
 import { AutomationMetricsService } from "../automation-core/application/services/automation-metrics.service"
 import { AutomationPipelineService } from "../automation-core/application/services/automation-pipeline.service"
+import { AutomationRegistryService } from "../automation-core/application/services/automation-registry.service"
+import { PayloadValidatorService } from "../automation-core/application/services/payload-validator.service"
+import { FacebookDriver } from "../automation-core/domain/facebook-driver"
 import { AutomationJob } from "../automation-core/domain/automation-core.model"
 import { AutomationContext, ExecutionResult } from "../automation-core/domain/automation-framework.model"
+import { AutomationCapability, AutomationPlugin } from "../automation-core/domain/automation-plugin.model"
 
 describe("Automation Framework V2 (F-50 Core Refactor) Unit Tests", () => {
   let queueAdapter: BullMQQueueAdapter
@@ -15,7 +19,10 @@ describe("Automation Framework V2 (F-50 Core Refactor) Unit Tests", () => {
   let policyService: PolicyService
   let delayCalculator: DelayCalculatorService
   let metricsService: AutomationMetricsService
+  let registryService: AutomationRegistryService
+  let payloadValidator: PayloadValidatorService
   let pipelineService: AutomationPipelineService
+  let facebookDriver: FacebookDriver
 
   beforeEach(() => {
     queueAdapter = new BullMQQueueAdapter()
@@ -24,13 +31,37 @@ describe("Automation Framework V2 (F-50 Core Refactor) Unit Tests", () => {
     policyService = new PolicyService()
     delayCalculator = new DelayCalculatorService()
     metricsService = new AutomationMetricsService()
+    registryService = new AutomationRegistryService()
+    payloadValidator = new PayloadValidatorService(registryService, featureFlagService, policyService)
+    facebookDriver = new FacebookDriver()
+    registryService.registerDriver(facebookDriver)
+
+    const defaultPlugin: AutomationPlugin = {
+      metadata: {
+        id: "fb-default-plugin",
+        name: "Facebook Default Plugin",
+        version: "1.0.0",
+        description: "Default testing plugin",
+        platform: "facebook"
+      },
+      driver: facebookDriver,
+      capabilities: [AutomationCapability.POST, AutomationCapability.MARKETPLACE_LISTING],
+      executionStrategy: { execute: async () => ({ success: true }) },
+      isEnabled: true,
+      verify: async () => ({ status: "Success", verifiedAt: new Date() }),
+      report: async () => {}
+    }
+    registryService.registerPlugin(defaultPlugin)
+
     pipelineService = new AutomationPipelineService(
       queueAdapter,
       lockManager,
       featureFlagService,
       policyService,
       delayCalculator,
-      metricsService
+      metricsService,
+      registryService,
+      payloadValidator
     )
   })
 
@@ -142,7 +173,8 @@ describe("Automation Framework V2 (F-50 Core Refactor) Unit Tests", () => {
       "facebook",
       "marketplace_post",
       "item-123",
-      mockExecutor
+      mockExecutor,
+      AutomationCapability.MARKETPLACE_LISTING
     )
 
     expect(res.status).toBe("Success")
