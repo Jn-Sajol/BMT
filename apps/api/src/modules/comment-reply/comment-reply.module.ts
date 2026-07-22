@@ -12,6 +12,12 @@ import { ReplyJobCoordinator } from "./application/services/reply-job-coordinato
 import { CommentReplyExecutionStrategy } from "./application/services/comment-reply-execution-strategy.service"
 import { CommentReplyStateMachine } from "./application/services/comment-reply-state-machine.service"
 import { CommentReplyJobCoordinator } from "./application/services/comment-reply-job-coordinator.service"
+import { AutoReplyPolicyService } from "./application/services/auto-reply-policy.service"
+import { SavedReplySelectorService } from "./application/services/saved-reply-selector.service"
+import { AutoReplyDelayService } from "./application/services/auto-reply-delay.service"
+import { AutoReplyExecutionStrategy } from "./application/services/auto-reply-execution-strategy.service"
+import { AutoReplyStateMachine } from "./application/services/auto-reply-state-machine.service"
+import { AutoReplyJobCoordinator } from "./application/services/auto-reply-job-coordinator.service"
 import { CommentInboxRepository } from "./infrastructure/comment-inbox.repository"
 import { ReplyTemplateRepository } from "./infrastructure/reply-template.repository"
 import { ReplyReportRepository } from "./infrastructure/reply-report.repository"
@@ -34,6 +40,12 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     CommentReplyExecutionStrategy,
     CommentReplyStateMachine,
     CommentReplyJobCoordinator,
+    AutoReplyPolicyService,
+    SavedReplySelectorService,
+    AutoReplyDelayService,
+    AutoReplyExecutionStrategy,
+    AutoReplyStateMachine,
+    AutoReplyJobCoordinator,
     CommentInboxRepository,
     ReplyTemplateRepository,
     ReplyReportRepository,
@@ -50,6 +62,12 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     CommentReplyExecutionStrategy,
     CommentReplyStateMachine,
     CommentReplyJobCoordinator,
+    AutoReplyPolicyService,
+    SavedReplySelectorService,
+    AutoReplyDelayService,
+    AutoReplyExecutionStrategy,
+    AutoReplyStateMachine,
+    AutoReplyJobCoordinator,
     CommentInboxRepository,
     ReplyTemplateRepository,
     ReplyReportRepository,
@@ -60,7 +78,9 @@ export class CommentReplyModule implements OnModuleInit {
     private readonly registryService: AutomationRegistryService,
     private readonly facebookDriver: FacebookDriver,
     private readonly replyStrategy: CommentReplyExecutionStrategy,
-    private readonly replyCoordinator: CommentReplyJobCoordinator
+    private readonly replyCoordinator: CommentReplyJobCoordinator,
+    private readonly autoStrategy: AutoReplyExecutionStrategy,
+    private readonly autoCoordinator: AutoReplyJobCoordinator
   ) {}
 
   onModuleInit() {
@@ -81,6 +101,24 @@ export class CommentReplyModule implements OnModuleInit {
       report: async () => {}
     }
 
+    const autoPlugin: AutomationPlugin = {
+      metadata: {
+        id: "fb-auto-comment-reply-plugin",
+        name: "Facebook Auto Comment Reply Engine",
+        version: "1.0.0",
+        description: "Client Requirement #11 Completion: Auto Reply Engine",
+        platform: "facebook"
+      },
+      driver: this.facebookDriver,
+      capabilities: [AutomationCapability.COMMENT_AUTO_REPLY],
+      executionStrategy: this.autoStrategy,
+      jobCoordinator: this.autoCoordinator,
+      isEnabled: true,
+      verify: async () => ({ status: "Success", verifiedAt: new Date() }),
+      report: async () => {}
+    }
+
     this.registryService.registerPlugin(plugin)
+    this.registryService.registerPlugin(autoPlugin)
   }
 }
