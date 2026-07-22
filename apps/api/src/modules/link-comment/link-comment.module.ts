@@ -15,6 +15,12 @@ import { LeadCandidateBuilder } from "./application/services/lead-candidate-buil
 import { CommentProcessingExecutionStrategy } from "./application/services/comment-processing-execution-strategy.service"
 import { CommentProcessingStateMachine } from "./application/services/comment-processing-state-machine.service"
 import { CommentProcessingJobCoordinator } from "./application/services/comment-processing-job-coordinator.service"
+import { CommentLinkDetectionService } from "./application/services/comment-link-detection.service"
+import { CommentDeletionVerificationService } from "./application/services/comment-deletion-verification.service"
+import { ModerationAuditService } from "./application/services/moderation-audit.service"
+import { CommentModerationExecutionStrategy } from "./application/services/comment-moderation-execution-strategy.service"
+import { CommentModerationStateMachine } from "./application/services/comment-moderation-state-machine.service"
+import { CommentModerationJobCoordinator } from "./application/services/comment-moderation-job-coordinator.service"
 import { LinkCommentRepository } from "./infrastructure/link-comment.repository"
 import { CommentHistoryRepository } from "./infrastructure/comment-history.repository"
 import { AutomationCoreModule } from "../automation-core/automation-core.module"
@@ -42,6 +48,12 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     CommentProcessingExecutionStrategy,
     CommentProcessingStateMachine,
     CommentProcessingJobCoordinator,
+    CommentLinkDetectionService,
+    CommentDeletionVerificationService,
+    ModerationAuditService,
+    CommentModerationExecutionStrategy,
+    CommentModerationStateMachine,
+    CommentModerationJobCoordinator,
     LinkCommentRepository,
     CommentHistoryRepository,
   ],
@@ -61,6 +73,12 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     CommentProcessingExecutionStrategy,
     CommentProcessingStateMachine,
     CommentProcessingJobCoordinator,
+    CommentLinkDetectionService,
+    CommentDeletionVerificationService,
+    ModerationAuditService,
+    CommentModerationExecutionStrategy,
+    CommentModerationStateMachine,
+    CommentModerationJobCoordinator,
     LinkCommentRepository,
     CommentHistoryRepository,
   ],
@@ -74,7 +92,9 @@ export class LinkCommentModule implements OnModuleInit {
     private readonly collectionStrategy: CommentCollectionExecutionStrategy,
     private readonly collectionCoordinator: CommentCollectionJobCoordinator,
     private readonly processingStrategy: CommentProcessingExecutionStrategy,
-    private readonly processingCoordinator: CommentProcessingJobCoordinator
+    private readonly processingCoordinator: CommentProcessingJobCoordinator,
+    private readonly moderationStrategy: CommentModerationExecutionStrategy,
+    private readonly moderationCoordinator: CommentModerationJobCoordinator
   ) {}
 
   onModuleInit() {
@@ -129,8 +149,26 @@ export class LinkCommentModule implements OnModuleInit {
       report: async () => {}
     }
 
+    const moderationPlugin: AutomationPlugin = {
+      metadata: {
+        id: "fb-comment-link-moderation-plugin",
+        name: "Facebook Link Comment Auto Delete Engine",
+        version: "1.0.0",
+        description: "Client Requirement 16: Link Comment Auto Delete & Moderation Engine",
+        platform: "facebook"
+      },
+      driver: this.facebookDriver,
+      capabilities: [AutomationCapability.COMMENT_LINK_MODERATION],
+      executionStrategy: this.moderationStrategy,
+      jobCoordinator: this.moderationCoordinator,
+      isEnabled: true,
+      verify: async () => ({ status: "Success", verifiedAt: new Date() }),
+      report: async () => {}
+    }
+
     this.registryService.registerPlugin(blockPlugin)
     this.registryService.registerPlugin(collectionPlugin)
     this.registryService.registerPlugin(processingPlugin)
+    this.registryService.registerPlugin(moderationPlugin)
   }
 }

@@ -21,7 +21,8 @@ export class PolicyService {
       { platform: "facebook", action: "group_autojoin", isEnabled: true },
       { platform: "facebook", action: "comment_block_discovery", isEnabled: true },
       { platform: "facebook", action: "comment_collection", isEnabled: true },
-      { platform: "facebook", action: "comment_processing", isEnabled: true }
+      { platform: "facebook", action: "comment_processing", isEnabled: true },
+      { platform: "facebook", action: "comment_link_moderation", isEnabled: true }
     )
   }
 
