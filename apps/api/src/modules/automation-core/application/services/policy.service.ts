@@ -16,7 +16,8 @@ export class PolicyService {
       { platform: "facebook", action: "messenger_reply", isEnabled: true },
       { platform: "facebook", action: "group_messenger_post", isEnabled: true },
       { platform: "facebook", action: "friend_request", isEnabled: true },
-      { platform: "facebook", action: "unfriend", isEnabled: true }
+      { platform: "facebook", action: "unfriend", isEnabled: true },
+      { platform: "facebook", action: "group_discovery", isEnabled: true }
     )
   }
 

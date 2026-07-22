@@ -1,56 +1,126 @@
-import { SavedGroupRepository } from "../group-hunter/infrastructure/saved-group.repository"
-import { SearchHistoryRepository } from "../group-hunter/infrastructure/search-history.repository"
-import { GroupSearchService } from "../group-hunter/application/services/group-search.service"
-import { GroupCollectionRepository } from "../group-hunter/infrastructure/group-collection.repository"
-import { GroupCollectionService } from "../group-hunter/application/services/group-collection.service"
-import { GroupHunterController } from "../group-hunter/presentation/group-hunter.controller"
+import { RedisLockManager } from "../automation-core/infrastructure/redis-lock.manager"
+import { BullMQQueueAdapter } from "../automation-core/infrastructure/bullmq-queue.adapter"
+import { DelayCalculatorService } from "../automation-core/application/services/delay-calculator.service"
+import { AutomationRegistryService } from "../automation-core/application/services/automation-registry.service"
+import { FacebookDriver } from "../automation-core/domain/facebook-driver"
+import { GroupRankingService } from "../group-hunter/application/services/group-ranking.service"
+import { GroupClassificationService } from "../group-hunter/application/services/group-classification.service"
+import { GroupHunterStateMachine } from "../group-hunter/application/services/group-hunter-state-machine.service"
+import { GroupHunterJobCoordinator } from "../group-hunter/application/services/group-hunter-job-coordinator.service"
+import { GroupHunterExecutionStrategy } from "../group-hunter/application/services/group-hunter-execution-strategy.service"
+import { AutomationCapability, AutomationPlugin } from "../automation-core/domain/automation-plugin.model"
+import { AutomationJob, HumanBehaviourConfig } from "../automation-core/domain/automation-core.model"
+import { InMemoryEventBus } from "../automation/infrastructure/bus/in-memory-event-bus"
 
-describe("FB Group Hunter (F-32) Unit Tests", () => {
-  it("should search group details, save, add favorite, CRUD collections directories, and log history reviews", async () => {
-    const savedRepo = new SavedGroupRepository()
-    const historyRepo = new SearchHistoryRepository()
-    const colRepo = new GroupCollectionRepository()
+describe("Group Hunter Discovery Engine (F-52 / Client Req F-32) Unit Tests", () => {
+  let lockManager: RedisLockManager
+  let queueAdapter: BullMQQueueAdapter
+  let stateMachine: GroupHunterStateMachine
+  let rankingService: GroupRankingService
+  let classificationService: GroupClassificationService
+  let delayCalculator: DelayCalculatorService
+  let registryService: AutomationRegistryService
+  let coordinator: GroupHunterJobCoordinator
+  let strategy: GroupHunterExecutionStrategy
+  let eventBus: InMemoryEventBus
+  let facebookDriver: FacebookDriver
 
-    const searchService = new GroupSearchService(savedRepo, historyRepo)
-    const colService = new GroupCollectionService(colRepo)
+  beforeEach(() => {
+    lockManager = new RedisLockManager()
+    queueAdapter = new BullMQQueueAdapter()
+    stateMachine = new GroupHunterStateMachine()
+    rankingService = new GroupRankingService()
+    classificationService = new GroupClassificationService()
+    delayCalculator = new DelayCalculatorService()
+    registryService = new AutomationRegistryService()
+    eventBus = new InMemoryEventBus()
+    facebookDriver = new FacebookDriver()
 
-    const controller = new GroupHunterController(searchService, colService)
+    coordinator = new GroupHunterJobCoordinator(
+      lockManager,
+      queueAdapter,
+      stateMachine,
+      rankingService,
+      classificationService,
+      delayCalculator,
+      eventBus
+    )
+    strategy = new GroupHunterExecutionStrategy(queueAdapter)
 
-    // 1. Search Discovered Groups list
-    const list = await controller.search("E-Commerce", "US", "en")
-    expect(list.length).toBe(2)
-    expect(list[0].name).toBe("Shopify Dropshipping Beginners Hub")
+    registryService.registerDriver(facebookDriver)
+    const plugin: AutomationPlugin = {
+      metadata: {
+        id: "fb-group-hunter-plugin",
+        name: "Facebook Group Hunter Discovery Engine",
+        version: "1.0.0",
+        description: "Group Discovery plugin",
+        platform: "facebook"
+      },
+      driver: facebookDriver,
+      capabilities: [AutomationCapability.GROUP_DISCOVERY],
+      executionStrategy: strategy,
+      jobCoordinator: coordinator,
+      isEnabled: true,
+      verify: async () => ({ status: "Success", verifiedAt: new Date() }),
+      report: async () => {}
+    }
+    registryService.registerPlugin(plugin)
+  })
 
-    // 2. Save group
-    const saved = await controller.saveGroup(list[0], undefined)
-    expect(saved.discoveredGroup.groupId).toBe("8001")
-    expect(saved.isFavorite).toBe(false)
+  it("should verify plugin registration under GROUP_DISCOVERY capability", () => {
+    const plugin = registryService.getPluginByCapability("facebook", AutomationCapability.GROUP_DISCOVERY)
+    expect(plugin).toBeDefined()
+    expect(plugin?.metadata.id).toBe("fb-group-hunter-plugin")
+  })
 
-    // 3. Toggle Favorite
-    const fav = await controller.favorite(saved.id)
-    expect(fav.isFavorite).toBe(true)
+  it("should classify group metadata correctly", () => {
+    const res = classificationService.classifyGroup("Bangladesh Buy and Sell Market", "Buy and sell items here")
+    expect(res.category).toBe("E-Commerce")
+    expect(res.groupType).toBe("BUY_SELL")
+  })
 
-    // 4. Collections manager CRUD
-    const col = await controller.createCollection("Target SaaS Leads")
-    expect(col.name).toBe("Target SaaS Leads")
+  it("should score, rank, and process candidate groups through discovery coordinator", async () => {
+    const job: AutomationJob = {
+      id: "gh-job-1",
+      correlationId: "corr-gh-1",
+      workspaceId: "ws-gh",
+      jobType: "group_discovery",
+      status: "Created",
+      payload: {},
+      retryCount: 0,
+      maxRetries: 3,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
 
-    const renamed = await controller.renameCollection(col.id, "Target Dropshipping Leads")
-    expect(renamed.name).toBe("Target Dropshipping Leads")
+    const hbf: HumanBehaviourConfig = {
+      accountId: "acc-gh",
+      timezone: "UTC",
+      workingHours: { startHour: 0, endHour: 23 },
+      dailyLimits: { group_discovery: 20 },
+      minCooldownMinutes: 5,
+      randomDelayRange: { minSeconds: 1, maxSeconds: 5 }
+    }
 
-    const colsList = await colService.getCollections()
-    expect(colsList.length).toBe(1)
+    const publishedEvents: any[] = []
+    eventBus.subscribe("*", async (e) => {
+      publishedEvents.push(e)
+    })
 
-    await controller.deleteCollection(col.id)
-    const listAfterDelete = await colService.getCollections()
-    expect(listAfterDelete.length).toBe(0)
+    const rawCandidates = [
+      { id: "grp-1", name: "Dhaka Tech Developers", description: "Software dev group", memberCount: 15000, privacy: "PUBLIC" as const },
+      { id: "grp-2", name: "Dhaka Buy Sell Bazar", description: "E-Commerce buy sell", memberCount: 60000, privacy: "PUBLIC" as const }
+    ]
 
-    // 5. Search history and statistics
-    const history = await controller.getHistory()
-    expect(history.length).toBe(1)
-    expect(history[0].keyword).toBe("E-Commerce")
+    const discoveryRes = await coordinator.coordinateDiscovery(job, ["Dhaka", "Tech"], rawCandidates, hbf)
 
-    const stats = await controller.getStatistics()
-    expect(stats.savedGroups).toBe(1)
-    expect(stats.favoriteGroups).toBe(1)
+    expect(discoveryRes.success).toBe(true)
+    expect(discoveryRes.candidateCount).toBe(2)
+    expect(stateMachine.getJobState("gh-job-1")).toBe("Completed")
+
+    const timeline = stateMachine.getAuditTimeline("gh-job-1")
+    expect(timeline.length).toBe(6)
+    expect(publishedEvents.length).toBeGreaterThan(0)
+    expect(publishedEvents[0].eventVersion).toBe("1.0")
   })
 })

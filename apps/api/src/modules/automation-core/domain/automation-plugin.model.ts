@@ -13,6 +13,7 @@ export enum AutomationCapability {
   FRIEND_REQUEST = "FRIEND_REQUEST",
   UNFRIEND = "UNFRIEND",
   MARKETPLACE_LISTING = "MARKETPLACE_LISTING",
+  GROUP_DISCOVERY = "GROUP_DISCOVERY",
 }
 
 export interface PlatformDriver {
