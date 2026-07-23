@@ -11,6 +11,12 @@ import { MessengerJobCoordinator } from "./application/services/messenger-job-co
 import { MessengerInboxExecutionStrategy } from "./application/services/messenger-inbox-execution-strategy.service"
 import { MessengerInboxStateMachine } from "./application/services/messenger-inbox-state-machine.service"
 import { MessengerInboxJobCoordinator } from "./application/services/messenger-inbox-job-coordinator.service"
+import { MessengerReplySuggestionService } from "./application/services/messenger-reply-suggestion.service"
+import { MessengerManualApprovalService } from "./application/services/messenger-manual-approval.service"
+import { MessengerReplyLibraryService } from "./application/services/messenger-reply-library.service"
+import { MessengerManualReplyExecutionStrategy } from "./application/services/messenger-manual-reply-execution-strategy.service"
+import { MessengerManualReplyStateMachine } from "./application/services/messenger-manual-reply-state-machine.service"
+import { MessengerManualReplyJobCoordinator } from "./application/services/messenger-manual-reply-job-coordinator.service"
 import { ConversationInboxRepository } from "./infrastructure/conversation-inbox.repository"
 import { MessageTemplateRepository } from "./infrastructure/message-template.repository"
 import { ConversationReportRepository } from "./infrastructure/conversation-report.repository"
@@ -32,6 +38,12 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     MessengerInboxExecutionStrategy,
     MessengerInboxStateMachine,
     MessengerInboxJobCoordinator,
+    MessengerReplySuggestionService,
+    MessengerManualApprovalService,
+    MessengerReplyLibraryService,
+    MessengerManualReplyExecutionStrategy,
+    MessengerManualReplyStateMachine,
+    MessengerManualReplyJobCoordinator,
     ConversationInboxRepository,
     MessageTemplateRepository,
     ConversationReportRepository,
@@ -47,6 +59,12 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     MessengerInboxExecutionStrategy,
     MessengerInboxStateMachine,
     MessengerInboxJobCoordinator,
+    MessengerReplySuggestionService,
+    MessengerManualApprovalService,
+    MessengerReplyLibraryService,
+    MessengerManualReplyExecutionStrategy,
+    MessengerManualReplyStateMachine,
+    MessengerManualReplyJobCoordinator,
     ConversationInboxRepository,
     MessageTemplateRepository,
     ConversationReportRepository,
@@ -57,11 +75,13 @@ export class MessengerControllerModule implements OnModuleInit {
     private readonly registryService: AutomationRegistryService,
     private readonly facebookDriver: FacebookDriver,
     private readonly inboxStrategy: MessengerInboxExecutionStrategy,
-    private readonly inboxCoordinator: MessengerInboxJobCoordinator
+    private readonly inboxCoordinator: MessengerInboxJobCoordinator,
+    private readonly manualStrategy: MessengerManualReplyExecutionStrategy,
+    private readonly manualCoordinator: MessengerManualReplyJobCoordinator
   ) {}
 
   onModuleInit() {
-    const plugin: AutomationPlugin = {
+    const inboxPlugin: AutomationPlugin = {
       metadata: {
         id: "fb-messenger-inbox-plugin",
         name: "Facebook Messenger Inbox Controller Foundation",
@@ -78,6 +98,24 @@ export class MessengerControllerModule implements OnModuleInit {
       report: async () => {}
     }
 
-    this.registryService.registerPlugin(plugin)
+    const manualPlugin: AutomationPlugin = {
+      metadata: {
+        id: "fb-messenger-manual-reply-plugin",
+        name: "Facebook Messenger Manual Reply Assistant",
+        version: "1.0.0",
+        description: "Client Requirement #12: Messenger Controller Manual Reply Assistant",
+        platform: "facebook"
+      },
+      driver: this.facebookDriver,
+      capabilities: [AutomationCapability.MESSENGER_MANUAL_REPLY],
+      executionStrategy: this.manualStrategy,
+      jobCoordinator: this.manualCoordinator,
+      isEnabled: true,
+      verify: async () => ({ status: "Success", verifiedAt: new Date() }),
+      report: async () => {}
+    }
+
+    this.registryService.registerPlugin(inboxPlugin)
+    this.registryService.registerPlugin(manualPlugin)
   }
 }
