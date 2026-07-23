@@ -51,6 +51,8 @@ import { YouTubeModule } from './modules/youtube/youtube.module';
 import { AutomationCoreModule } from './modules/automation-core/automation-core.module';
 import { BrowserRuntimeModule } from './modules/browser-runtime/browser-runtime.module';
 
+import { MessengerGroupModule } from './modules/messenger-group/messenger-group.module';
+
 @Module({
   imports: [
     HealthModule,
@@ -92,6 +94,7 @@ import { BrowserRuntimeModule } from './modules/browser-runtime/browser-runtime.
     PublicCommentModule,
     CommentReplyModule,
     MessengerControllerModule,
+    MessengerGroupModule,
     MessengerGroupsModule,
     FriendManagementModule,
     LinkCommentModule,

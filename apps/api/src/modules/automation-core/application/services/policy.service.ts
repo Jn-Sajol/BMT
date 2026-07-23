@@ -27,7 +27,8 @@ export class PolicyService {
       { platform: "facebook", action: "comment_auto_reply", isEnabled: true },
       { platform: "facebook", action: "messenger_inbox", isEnabled: true },
       { platform: "facebook", action: "messenger_manual_reply", isEnabled: true },
-      { platform: "facebook", action: "messenger_auto_reply", isEnabled: true }
+      { platform: "facebook", action: "messenger_auto_reply", isEnabled: true },
+      { platform: "facebook", action: "messenger_group_assistant", isEnabled: true }
     )
   }
 
