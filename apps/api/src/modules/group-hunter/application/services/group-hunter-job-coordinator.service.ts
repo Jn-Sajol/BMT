@@ -3,13 +3,40 @@ import { BaseJobCoordinator } from "../../../automation-core/domain/base-job-coo
 import { RedisLockManager } from "../../../automation-core/infrastructure/redis-lock.manager"
 import { BullMQQueueAdapter } from "../../../automation-core/infrastructure/bullmq-queue.adapter"
 import { GroupHunterStateMachine, GroupHunterJobState } from "./group-hunter-state-machine.service"
-import { GroupRankingService, CandidateGroupRaw } from "./group-ranking.service"
-import { GroupClassificationService } from "./group-classification.service"
+import { GroupDiscoveryService, DiscoveredGroupData } from "./group-discovery.service"
+import { GroupFilteringService, GroupFilterCriteria } from "./group-filtering.service"
+import { GroupScoringService, GroupScoreResult } from "./group-scoring.service"
+import { GroupCandidateQueueService, GroupCandidateQueueItem } from "./group-candidate-queue.service"
+import { GroupExportService, ExportResult, ExportFormat } from "./group-export.service"
 import { AutomationJob, HumanBehaviourConfig } from "../../../automation-core/domain/automation-core.model"
 import { DelayCalculatorService } from "../../../automation-core/application/services/delay-calculator.service"
+import { PayloadValidatorService } from "../../../automation-core/application/services/payload-validator.service"
+import { PolicyService } from "../../../automation-core/application/services/policy.service"
+import { AutomationRegistryService } from "../../../automation-core/application/services/automation-registry.service"
+import { AutomationCapability } from "../../../automation-core/domain/automation-plugin.model"
+import { AutomationContext } from "../../../automation-core/domain/automation-framework.model"
 import { IEventBus } from "../../../automation/application/ports/event-bus.interface"
 import { DomainEvent } from "../../../automation/domain/models/domain-event.model"
 import * as crypto from "crypto"
+
+export interface GroupHunterTask {
+  rawGroups: Array<{
+    groupId: string
+    groupName?: string
+    groupUrl?: string
+    memberCount?: number
+    privacy?: "PUBLIC" | "PRIVATE"
+    language?: string
+    category?: string
+    lastActivity?: Date
+    description?: string
+  }>
+  filterCriteria?: GroupFilterCriteria
+  targetKeywords?: string[]
+  targetCategory?: string
+  targetLanguage?: string
+  exportFormat?: ExportFormat
+}
 
 @Injectable()
 export class GroupHunterJobCoordinator extends BaseJobCoordinator<GroupHunterJobState> {
@@ -17,80 +44,144 @@ export class GroupHunterJobCoordinator extends BaseJobCoordinator<GroupHunterJob
     lockManager: RedisLockManager,
     queueAdapter: BullMQQueueAdapter,
     stateMachine: GroupHunterStateMachine,
-    private readonly rankingService: GroupRankingService,
-    private readonly classificationService: GroupClassificationService,
+    private readonly discoveryService: GroupDiscoveryService,
+    private readonly filteringService: GroupFilteringService,
+    private readonly scoringService: GroupScoringService,
+    private readonly candidateQueueService: GroupCandidateQueueService,
+    private readonly exportService: GroupExportService,
     private readonly delayCalculator: DelayCalculatorService,
+    private readonly payloadValidator: PayloadValidatorService,
+    private readonly policyService: PolicyService,
+    private readonly registryService: AutomationRegistryService,
     @Inject("IEventBus") private readonly eventBus: IEventBus
   ) {
     super(lockManager, queueAdapter, stateMachine)
   }
 
-  public async coordinateDiscovery(
+  public async coordinateGroupHunterTask(
     job: AutomationJob,
-    rawKeywords: string[],
-    rawCandidates: CandidateGroupRaw[],
+    accountId: string,
+    task: GroupHunterTask,
     hbf: HumanBehaviourConfig
-  ): Promise<{ success: boolean; candidateCount: number; reason?: string }> {
+  ): Promise<{
+    success: boolean
+    discoveredCount: number
+    filteredCount: number
+    candidates: GroupCandidateQueueItem[]
+    exportResult?: ExportResult
+    reason?: string
+  }> {
     const jobId = job.id
-    console.log(`[GroupHunterCoordinator] Start discovery pipeline for Job: ${jobId}`)
+    console.log(`[GroupHunterJobCoordinator] Coordinating group hunter pipeline for workspace ${job.workspaceId} (Job ${jobId})`)
 
-    await this.publishLifecycleEvent(job, "BeforePrepare")
+    await this.publishLifecycleEvent(job, "BeforePrepare", task)
+    await this.stateMachine.transition(jobId, "DiscoveryReceived", `Received ${task.rawGroups.length} raw group items`)
 
-    // 1. HBF Validation via centralized DelayCalculatorService
-    const delayCheck = this.delayCalculator.calculatePacingDelay({
+    // 1. Validation Context
+    const context: AutomationContext = {
       workspaceId: job.workspaceId,
-      accountId: hbf.accountId,
+      accountId,
       hbfConfig: hbf,
       featureFlags: { "system.advanced_automation": true },
-      dailyBudget: 50,
-      hourlyBudget: 10,
+      dailyBudget: hbf.dailyLimits?.group_hunter || 300,
+      hourlyBudget: 30,
       accountHealthScore: 90,
       riskLevel: "Low",
-      queues: ["preparation", "execution", "reporting"]
-    })
-
-    if (!delayCheck.isWithinWorkingHours) {
-      await this.stateMachine.transition(jobId, "Failed", `Delayed: ${delayCheck.reason}`)
-      await this.publishLifecycleEvent(job, "OnFailure", { reason: delayCheck.reason })
-      return { success: false, candidateCount: 0, reason: delayCheck.reason }
+      queues: ["preparation", "execution", "verification", "reporting"]
     }
 
-    // 2. Keyword Normalization
-    const normalizedKeywords = rawKeywords.map((k) => k.toLowerCase().trim()).filter(Boolean)
-    await this.stateMachine.transition(jobId, "KeywordsNormalized", `Normalized ${normalizedKeywords.length} keywords`)
+    const valRes = await this.payloadValidator.validateJobPayload(
+      job,
+      context,
+      "facebook",
+      AutomationCapability.GROUP_HUNTER
+    )
+    if (!valRes.valid) {
+      await this.stateMachine.transition(jobId, "Failed", `Payload validation failed: ${valRes.reason}`)
+      await this.publishLifecycleEvent(job, "OnFailure", { reason: valRes.reason })
+      return { success: false, discoveredCount: 0, filteredCount: 0, candidates: [], reason: valRes.reason }
+    }
 
-    // 3. Duplicate Detection
-    const existingGroupIds = new Set<string>() // Reused existing candidate index
-    const scoredDuplicates = this.rankingService.detectDuplicates(rawCandidates, existingGroupIds)
-    const uniqueCandidates = scoredDuplicates.filter((g) => !g.isDuplicate)
-    await this.stateMachine.transition(jobId, "DuplicatesFiltered", `Filtered ${scoredDuplicates.length - uniqueCandidates.length} duplicates`)
+    // 2. Normalization & Deduplication
+    const normalizedGroups: DiscoveredGroupData[] = []
+    let deduplicatedCount = 0
 
-    // 4. Category Classification
-    const classifiedCandidates = uniqueCandidates.map((g) => {
-      const cls = this.classificationService.classifyGroup(g.name, g.description, g.privacy)
-      return { ...g, classification: cls }
-    })
-    await this.stateMachine.transition(jobId, "Classified", `Classified ${classifiedCandidates.length} candidate groups`)
+    for (const raw of task.rawGroups) {
+      const { group, isDuplicate } = this.discoveryService.processDiscoveredGroup({
+        ...raw,
+        workspaceId: job.workspaceId,
+        accountId
+      })
+      if (!isDuplicate) {
+        normalizedGroups.push(group)
+      } else {
+        deduplicatedCount++
+      }
+    }
 
-    // 5. AI Relevance Scoring & Priority Ranking
-    const rankedCandidates = classifiedCandidates.map((g) => {
-      const primaryKeyword = normalizedKeywords[0] || ""
-      const relScore = this.rankingService.calculateRelevanceScore(g, primaryKeyword)
-      const prioScore = this.rankingService.calculatePriorityScore(g, relScore)
-      return { ...g, relevanceScore: relScore, priorityScore: prioScore }
-    }).sort((a, b) => b.priorityScore - a.priorityScore)
+    await this.stateMachine.transition(jobId, "Normalized", `Normalized ${normalizedGroups.length} groups`)
+    await this.stateMachine.transition(jobId, "Deduplicated", `Deduplicated ${deduplicatedCount} group events`)
 
-    await this.stateMachine.transition(jobId, "ScoredAndRanked", `Ranked top candidate group score: ${rankedCandidates[0]?.priorityScore || 0}`)
+    // 3. Filtering
+    const filteredGroups = this.filteringService.filterGroups(normalizedGroups, task.filterCriteria || {})
+    await this.stateMachine.transition(jobId, "Filtered", `Filtered down to ${filteredGroups.length} eligible groups`)
 
-    // 6. Candidate Queue Generation (Stops before joining or execution)
-    await this.stateMachine.transition(jobId, "CandidateQueueGenerated", `Candidate queue populated with ${rankedCandidates.length} groups`)
-    await this.stateMachine.transition(jobId, "Completed", "Discovery Engine Foundation completed successfully")
+    // 4. Scoring
+    const candidates: GroupCandidateQueueItem[] = []
+    for (const group of filteredGroups) {
+      const scoreResult = this.scoringService.calculateGroupScore(
+        group,
+        task.targetKeywords || [],
+        task.targetCategory || "",
+        task.targetLanguage || "English"
+      )
+      const candidate = this.candidateQueueService.addCandidateToQueue(group, scoreResult)
+      candidates.push(candidate)
+    }
 
-    await this.publishLifecycleEvent(job, "AfterComplete", { totalCandidatesFound: rankedCandidates.length })
+    await this.stateMachine.transition(jobId, "Scored", `Scored and ranked ${candidates.length} candidate groups`)
+    await this.stateMachine.transition(jobId, "CandidateQueuePrepared", `Enqueued ${candidates.length} candidates into review queue`)
 
-    return {
-      success: true,
-      candidateCount: rankedCandidates.length
+    // 5. Distributed Lock: lock:${workspaceId}:${accountId}:group_hunter:${workspaceId}
+    const lockKey = `lock:${job.workspaceId}:${accountId}:group_hunter:${job.workspaceId}`
+    const lockAcquired = await this.lockManager.acquireLock(lockKey, `worker-${jobId}`, 15000)
+
+    if (!lockAcquired) {
+      await this.stateMachine.transition(jobId, "Failed", `Distributed lock conflict for ${lockKey}`)
+      await this.publishLifecycleEvent(job, "OnFailure", { reason: "Lock Conflict" })
+      await this.queueAdapter.enqueue("dlq", job)
+      return { success: false, discoveredCount: normalizedGroups.length, filteredCount: filteredGroups.length, candidates: [], reason: "Lock Conflict" }
+    }
+
+    try {
+      await this.publishLifecycleEvent(job, "BeforeExecute", { task, candidatesCount: candidates.length })
+
+      // 6. Exporting
+      const exportFormat = task.exportFormat || "JSON"
+      const exportResult = this.exportService.exportCandidates(candidates, exportFormat)
+      await this.stateMachine.transition(jobId, "Exported", `Exported candidate list in ${exportFormat} format`)
+
+      // 7. Pipeline Routing
+      await this.stateMachine.transition(jobId, "Reported", "Group hunter results reported to framework audit log")
+      await this.queueAdapter.enqueue("reporting", job)
+
+      await this.stateMachine.transition(jobId, "Completed", "Group hunter pipeline completed successfully")
+      await this.publishLifecycleEvent(job, "AfterComplete", { candidatesCount: candidates.length, exportFormat })
+
+      return {
+        success: true,
+        discoveredCount: normalizedGroups.length,
+        filteredCount: filteredGroups.length,
+        candidates,
+        exportResult
+      }
+    } catch (err: any) {
+      await this.stateMachine.transition(jobId, "Failed", `Error: ${err.message}`)
+      await this.publishLifecycleEvent(job, "OnFailure", { reason: err.message })
+      await this.queueAdapter.enqueue("retry", job)
+      return { success: false, discoveredCount: normalizedGroups.length, filteredCount: filteredGroups.length, candidates: [], reason: err.message }
+    } finally {
+      await this.lockManager.releaseLock(lockKey, `worker-${jobId}`)
     }
   }
 

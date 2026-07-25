@@ -7,6 +7,11 @@ import { GroupClassificationService } from "./application/services/group-classif
 import { GroupHunterExecutionStrategy } from "./application/services/group-hunter-execution-strategy.service"
 import { GroupHunterStateMachine } from "./application/services/group-hunter-state-machine.service"
 import { GroupHunterJobCoordinator } from "./application/services/group-hunter-job-coordinator.service"
+import { GroupDiscoveryService } from "./application/services/group-discovery.service"
+import { GroupFilteringService } from "./application/services/group-filtering.service"
+import { GroupScoringService } from "./application/services/group-scoring.service"
+import { GroupCandidateQueueService } from "./application/services/group-candidate-queue.service"
+import { GroupExportService } from "./application/services/group-export.service"
 import { GroupAutoJoinExecutionStrategy } from "./application/services/group-autojoin-execution-strategy.service"
 import { GroupAutoJoinStateMachine } from "./application/services/group-autojoin-state-machine.service"
 import { GroupAutoJoinJobCoordinator } from "./application/services/group-autojoin-job-coordinator.service"
@@ -30,6 +35,11 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     GroupHunterExecutionStrategy,
     GroupHunterStateMachine,
     GroupHunterJobCoordinator,
+    GroupDiscoveryService,
+    GroupFilteringService,
+    GroupScoringService,
+    GroupCandidateQueueService,
+    GroupExportService,
     GroupAutoJoinExecutionStrategy,
     GroupAutoJoinStateMachine,
     GroupAutoJoinJobCoordinator,
@@ -45,6 +55,11 @@ import { AutomationCapability, AutomationPlugin } from "../automation-core/domai
     GroupHunterExecutionStrategy,
     GroupHunterStateMachine,
     GroupHunterJobCoordinator,
+    GroupDiscoveryService,
+    GroupFilteringService,
+    GroupScoringService,
+    GroupCandidateQueueService,
+    GroupExportService,
     GroupAutoJoinExecutionStrategy,
     GroupAutoJoinStateMachine,
     GroupAutoJoinJobCoordinator,
@@ -57,25 +72,25 @@ export class GroupHunterModule implements OnModuleInit {
   constructor(
     private readonly registryService: AutomationRegistryService,
     private readonly facebookDriver: FacebookDriver,
-    private readonly discoveryStrategy: GroupHunterExecutionStrategy,
-    private readonly discoveryCoordinator: GroupHunterJobCoordinator,
+    private readonly hunterStrategy: GroupHunterExecutionStrategy,
+    private readonly hunterCoordinator: GroupHunterJobCoordinator,
     private readonly autoJoinStrategy: GroupAutoJoinExecutionStrategy,
     private readonly autoJoinCoordinator: GroupAutoJoinJobCoordinator
   ) {}
 
   onModuleInit() {
-    const discoveryPlugin: AutomationPlugin = {
+    const groupHunterPlugin: AutomationPlugin = {
       metadata: {
         id: "fb-group-hunter-plugin",
-        name: "Facebook Group Hunter Discovery Engine",
+        name: "Facebook Group Hunter & Messenger Group Link Finder",
         version: "1.0.0",
-        description: "Discovery and intelligence engine for Facebook group candidates",
+        description: "Client Requirement #17: Group Discovery, Evaluation, and Export Engine",
         platform: "facebook"
       },
       driver: this.facebookDriver,
-      capabilities: [AutomationCapability.GROUP_DISCOVERY],
-      executionStrategy: this.discoveryStrategy,
-      jobCoordinator: this.discoveryCoordinator,
+      capabilities: [AutomationCapability.GROUP_HUNTER, AutomationCapability.GROUP_DISCOVERY],
+      executionStrategy: this.hunterStrategy,
+      jobCoordinator: this.hunterCoordinator,
       isEnabled: true,
       verify: async () => ({ status: "Success", verifiedAt: new Date() }),
       report: async () => {}
@@ -98,7 +113,7 @@ export class GroupHunterModule implements OnModuleInit {
       report: async () => {}
     }
 
-    this.registryService.registerPlugin(discoveryPlugin)
+    this.registryService.registerPlugin(groupHunterPlugin)
     this.registryService.registerPlugin(autoJoinPlugin)
   }
 }
