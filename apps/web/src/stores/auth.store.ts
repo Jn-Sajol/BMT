@@ -16,17 +16,27 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  token: typeof window !== "undefined" ? localStorage.getItem("bmt_token") : null,
-  refreshToken: typeof window !== "undefined" ? localStorage.getItem("bmt_refresh_token") : null,
-  user: typeof window !== "undefined" && localStorage.getItem("bmt_user")
-    ? JSON.parse(localStorage.getItem("bmt_user")!)
+  token: typeof window !== "undefined" && localStorage.getItem("bmt_token") && localStorage.getItem("bmt_token") !== "undefined" && localStorage.getItem("bmt_token") !== "null"
+    ? localStorage.getItem("bmt_token")
+    : null,
+  refreshToken: typeof window !== "undefined" && localStorage.getItem("bmt_refresh_token") && localStorage.getItem("bmt_refresh_token") !== "undefined" && localStorage.getItem("bmt_refresh_token") !== "null"
+    ? localStorage.getItem("bmt_refresh_token")
+    : null,
+  user: typeof window !== "undefined" && localStorage.getItem("bmt_user") && localStorage.getItem("bmt_user") !== "undefined"
+    ? (() => {
+        try {
+          return JSON.parse(localStorage.getItem("bmt_user")!)
+        } catch {
+          return null
+        }
+      })()
     : null,
   setSession: (token, refreshToken, user) => {
     localStorage.setItem("bmt_token", token)
     localStorage.setItem("bmt_refresh_token", refreshToken)
     localStorage.setItem("bmt_user", JSON.stringify(user))
     if (typeof document !== "undefined") {
-      document.cookie = `bmt_token=${token}; path=/; max-age=604800`
+      document.cookie = `bmt_token=${token}; path=/; max-age=604800; SameSite=Lax`
     }
     set({ token, refreshToken, user })
   },

@@ -11,8 +11,10 @@ import { MessengerGroupRepository } from "./infrastructure/messenger-group.repos
 import { MessengerCampaignRepository } from "./infrastructure/messenger-campaign.repository"
 import { CampaignReportRepository } from "./infrastructure/campaign-report.repository"
 
+import { ActionModule } from "../automation/action/action.module"
+
 @Module({
-  imports: [AutomationCoreModule],
+  imports: [AutomationCoreModule, ActionModule],
   controllers: [MessengerGroupsController],
   providers: [
     MessengerGroupsSyncService,

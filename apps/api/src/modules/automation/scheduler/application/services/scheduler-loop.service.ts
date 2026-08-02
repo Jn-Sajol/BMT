@@ -21,16 +21,20 @@ export class SchedulerLoop implements OnApplicationBootstrap, OnApplicationShutd
   async onApplicationBootstrap() {
     this.isShuttingDown = false;
 
-    await this.prisma.automationSchedulerNode.create({
-      data: {
-        id: this.nodeId,
-        hostname: os.hostname(),
-        processId: process.pid,
-        heartbeatAt: new Date(),
-        version: '1.0.0',
-        status: 'ACTIVE',
-      },
-    });
+    try {
+      await this.prisma.automationSchedulerNode.create({
+        data: {
+          id: this.nodeId,
+          hostname: os.hostname(),
+          processId: process.pid,
+          heartbeatAt: new Date(),
+          version: '1.0.0',
+          status: 'ACTIVE',
+        },
+      });
+    } catch {
+      // Ignored when DB is offline during local dev startup
+    }
 
     this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), 10000);
     this.pollTimer = setInterval(() => this.pollSchedules(), 5000);

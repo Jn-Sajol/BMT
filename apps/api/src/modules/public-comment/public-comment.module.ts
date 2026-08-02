@@ -11,8 +11,10 @@ import { CommentCampaignRepository } from "./infrastructure/comment-campaign.rep
 import { CommentTemplateRepository } from "./infrastructure/comment-template.repository"
 import { CommentReportRepository } from "./infrastructure/comment-report.repository"
 
+import { ActionModule } from "../automation/action/action.module"
+
 @Module({
-  imports: [AutomationCoreModule],
+  imports: [AutomationCoreModule, ActionModule],
   controllers: [PublicCommentController],
   providers: [
     CommentCampaignService,

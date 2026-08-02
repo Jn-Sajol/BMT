@@ -16,9 +16,9 @@ async function bootstrap() {
   // Security configuration
   app.use(helmet());
   app.enableCors({
-    origin: '*', // Enforce strict cors in production settings
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Accept, Authorization, x-request-id',
+    allowedHeaders: '*',
   });
 
   // Global Prefix and Versioning Configuration

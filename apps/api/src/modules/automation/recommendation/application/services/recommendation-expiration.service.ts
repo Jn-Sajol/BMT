@@ -25,28 +25,32 @@ export class RecommendationExpirationService implements OnApplicationBootstrap, 
   }
 
   async sweepExpiredRecommendations() {
-    const now = new Date();
-    const expired = await this.prisma.automationRecommendation.findMany({
-      where: {
-        status: 'PENDING',
-        expiresAt: { lte: now },
-      },
-    });
-
-    for (const rec of expired) {
-      await this.prisma.automationRecommendation.update({
-        where: { id: rec.id },
-        data: { status: 'EXPIRED' },
-      });
-
-      await this.prisma.automationRecommendationHistory.create({
-        data: {
-          recommendationId: rec.id,
-          status: 'EXPIRED',
+    try {
+      const now = new Date();
+      const expired = await this.prisma.automationRecommendation.findMany({
+        where: {
+          status: 'PENDING',
+          expiresAt: { lte: now },
         },
       });
 
-      await this.publishEvent('Recommendation Expired', rec.workspaceId, rec.id, { recommendationId: rec.id });
+      for (const rec of expired) {
+        await this.prisma.automationRecommendation.update({
+          where: { id: rec.id },
+          data: { status: 'EXPIRED' },
+        });
+
+        await this.prisma.automationRecommendationHistory.create({
+          data: {
+            recommendationId: rec.id,
+            status: 'EXPIRED',
+          },
+        });
+
+        await this.publishEvent('Recommendation Expired', rec.workspaceId, rec.id, { recommendationId: rec.id });
+      }
+    } catch {
+      // Ignored when DB is offline during local dev
     }
   }
 

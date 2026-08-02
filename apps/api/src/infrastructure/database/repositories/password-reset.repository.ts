@@ -57,14 +57,25 @@ export class PasswordResetRepository implements IPasswordResetRepository {
 
   async save(entity: PasswordResetToken): Promise<PasswordResetToken> {
     try {
-      return await this.prisma.passwordResetToken.upsert({
-        where: { id: entity.id || '' },
-        update: {
-          tokenHash: entity.tokenHash,
-          expiresAt: entity.expiresAt,
-          usedAt: entity.usedAt,
-        },
-        create: {
+      if (entity.id) {
+        return await this.prisma.passwordResetToken.upsert({
+          where: { id: entity.id },
+          update: {
+            tokenHash: entity.tokenHash,
+            expiresAt: entity.expiresAt,
+            usedAt: entity.usedAt,
+          },
+          create: {
+            id: entity.id,
+            userId: entity.userId,
+            tokenHash: entity.tokenHash,
+            expiresAt: entity.expiresAt,
+            usedAt: entity.usedAt,
+          },
+        });
+      }
+      return await this.prisma.passwordResetToken.create({
+        data: {
           userId: entity.userId,
           tokenHash: entity.tokenHash,
           expiresAt: entity.expiresAt,

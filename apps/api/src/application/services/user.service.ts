@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { User } from '@prisma/client';
 import { CreateUserDto } from '../../common/dto/identity.dto';
 import { IUserService } from '../../common/ports/user-service.interface';
@@ -23,19 +24,19 @@ export class UserService implements IUserService {
 
     const hashedPassword = await this.hasher.hash(dto.password);
 
-    const mockUser: User = {
-      id: '',
+    const newUser: User = {
+      id: randomUUID(),
       email: dto.email,
       name: dto.name || null,
       passwordHash: hashedPassword,
       status: 'ACTIVE',
-      emailVerifiedAt: null,
+      emailVerifiedAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: null,
     };
 
-    return await this.userRepo.save(mockUser);
+    return await this.userRepo.save(newUser);
   }
 
   async getUserById(id: string): Promise<User | null> {

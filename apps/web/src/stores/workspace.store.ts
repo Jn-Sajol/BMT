@@ -14,8 +14,14 @@ interface WorkspaceState {
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
-  activeWorkspace: typeof window !== "undefined" && localStorage.getItem("bmt_active_workspace")
-    ? JSON.parse(localStorage.getItem("bmt_active_workspace")!)
+  activeWorkspace: typeof window !== "undefined" && localStorage.getItem("bmt_active_workspace") && localStorage.getItem("bmt_active_workspace") !== "undefined"
+    ? (() => {
+        try {
+          return JSON.parse(localStorage.getItem("bmt_active_workspace")!)
+        } catch {
+          return null
+        }
+      })()
     : null,
   activeMode: typeof window !== "undefined"
     ? (localStorage.getItem("bmt_active_mode") as "SAFE" | "ADVANCED" | null)

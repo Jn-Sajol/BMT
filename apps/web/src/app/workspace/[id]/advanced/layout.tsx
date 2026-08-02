@@ -32,18 +32,67 @@ export default function AdvancedLayout({ children }: { children: React.ReactNode
             <span className="font-bold text-lg">BMT ADVANCED</span>
           </div>
 
-          <nav className="space-y-1">
-            <button className="w-full text-left px-3 py-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 font-semibold text-sm">
-              Workflow Designer
+          <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-220px)] pr-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 px-3 py-1">Active Automations (Risk Mode)</div>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/designer`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 font-semibold text-xs"
+            >
+              🎨 Topological Workflow Designer
             </button>
-            <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm">
-              Automation Engine
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/connect-accounts`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              🔐 Connect Accounts (100 FB/Pages)
             </button>
-            <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm">
-              Execution Logs
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/post-scheduler`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              📢 Post Scheduler & AI Variations
             </button>
-            <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-muted-foreground text-sm">
-              Danger Zone
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/group-poster`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              👥 Post A Group Engine
+            </button>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/comment-assistant`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              💬 Smart Comment Assistant
+            </button>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/messenger-controller`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              📬 Messenger Controller Bot
+            </button>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/friend-automation`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              🤝 Friend Request & Accept Engine
+            </button>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/unfriend-inactive`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              🧹 Unfriend Inactive Users
+            </button>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/link-comment-block`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              🚫 Link Comment Auto-Deleter
+            </button>
+            <button
+              onClick={() => router.push(`/workspace/${activeWorkspace?.id || "workspace-1"}/advanced/group-hunter`)}
+              className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-muted text-muted-foreground text-xs font-medium"
+            >
+              🎯 Active Group & Link Hunter
             </button>
           </nav>
         </div>

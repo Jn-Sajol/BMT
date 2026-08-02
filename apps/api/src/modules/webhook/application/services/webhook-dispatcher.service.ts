@@ -19,6 +19,8 @@ export class WebhookDispatcher {
       port,
       password,
       maxRetriesPerRequest: null, // Required by BullMQ
+      enableOfflineQueue: false,
+      retryStrategy: () => 5000,
     });
 
     this.queue = new Queue('webhook-events', { connection });

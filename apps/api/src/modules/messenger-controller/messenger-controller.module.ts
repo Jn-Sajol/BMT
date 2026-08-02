@@ -31,8 +31,10 @@ import { AutomationRegistryService } from "../automation-core/application/servic
 import { FacebookDriver } from "../automation-core/domain/facebook-driver"
 import { AutomationCapability, AutomationPlugin } from "../automation-core/domain/automation-plugin.model"
 
+import { ActionModule } from "../automation/action/action.module"
+
 @Module({
-  imports: [AutomationCoreModule],
+  imports: [AutomationCoreModule, ActionModule],
   controllers: [MessengerControllerController],
   providers: [
     MessengerInboxService,

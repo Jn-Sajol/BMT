@@ -14,7 +14,7 @@ export default function WorkspacesPage() {
     { id: "workspace-2", name: "Agency Client Ops Workspace" },
   ]
 
-  const [selectedWorkspace, setSelectedWorkspaceState] = useState<typeof mockWorkspaces[0] | null>(null)
+  const [selectedWorkspace, setSelectedWorkspaceState] = useState<typeof mockWorkspaces[0] | null>(mockWorkspaces[0])
 
   const handleModeSelection = (mode: "SAFE" | "ADVANCED") => {
     if (!selectedWorkspace) return

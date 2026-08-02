@@ -23,6 +23,8 @@ export class NotificationDispatcher implements OnModuleInit {
       port,
       password,
       maxRetriesPerRequest: null,
+      enableOfflineQueue: false,
+      retryStrategy: () => 5000,
     })
 
     this.queue = new Queue("notification-delivery", { connection })

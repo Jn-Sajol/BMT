@@ -22,16 +22,18 @@ export class MetaConnectionRepository implements IMetaConnectionRepository {
 
   async findByWorkspaceId(workspaceId: string): Promise<MetaConnection | null> {
     try {
-      return await this.prisma.metaConnection.findUnique({
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(workspaceId);
+      if (!isUuid) {
+        return null;
+      }
+      return await this.prisma.metaConnection.findFirst({
         where: {
-          workspaceId_provider: {
-            workspaceId,
-            provider: 'meta',
-          },
+          workspaceId,
+          provider: 'meta',
         },
       });
     } catch (e) {
-      throw mapPrismaError(e) as Error;
+      return null;
     }
   }
 

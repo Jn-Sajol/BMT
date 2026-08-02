@@ -30,7 +30,8 @@ export default function LoginPage() {
       await login(data)
       router.push("/workspaces")
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Invalid email or password.")
+      const raw = err?.response?.data?.error?.message || err?.response?.data?.message || "Invalid email or password."
+      setError(Array.isArray(raw) ? raw.join(", ") : String(raw))
     }
   }
 

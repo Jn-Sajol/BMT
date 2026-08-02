@@ -5,18 +5,31 @@ import { useWorkspaceStore } from "../stores/workspace.store"
 import { useRouter, usePathname } from "next/navigation"
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const { activeWorkspace, activeMode } = useWorkspaceStore()
+  const { activeWorkspace, activeMode, setWorkspace, setMode } = useWorkspaceStore()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    // Block access to layout directories if no workspace is active
-    if (!pathname.startsWith("/auth") && pathname !== "/workspaces") {
+    if (pathname.startsWith("/workspace/")) {
+      const parts = pathname.split("/")
+      const wsId = parts[2]
+      const modeSegment = parts[3]?.toUpperCase() as "SAFE" | "ADVANCED"
+      
+      if (wsId && !activeWorkspace) {
+        setWorkspace({
+          id: wsId,
+          name: wsId === "workspace-2" ? "Agency Client Ops Workspace" : "Corporate Marketing OS Workspace",
+        })
+      }
+      if (modeSegment && (modeSegment === "SAFE" || modeSegment === "ADVANCED") && !activeMode) {
+        setMode(modeSegment)
+      }
+    } else if (!pathname.startsWith("/auth") && pathname !== "/workspaces") {
       if (!activeWorkspace || !activeMode) {
         router.push("/workspaces")
       }
     }
-  }, [activeWorkspace, activeMode, pathname, router])
+  }, [activeWorkspace, activeMode, pathname, router, setWorkspace, setMode])
 
   return <>{children}</>
 }

@@ -13,14 +13,13 @@ export class MetaOAuthProvider implements IMetaOAuthProvider {
       'email',
       'pages_show_list',
       'pages_read_engagement',
-      'pages_manage_metadata',
-      'business_management',
-      'ads_management',
-      'instagram_basic',
+      'pages_manage_posts',
+      'pages_messaging',
+      'read_insights',
     ];
     return `https://www.facebook.com/v18.0/dialog/oauth?client_id=${this.clientId}&redirect_uri=${encodeURIComponent(
       this.redirectUri,
-    )}&state=${state}&scope=${encodeURIComponent(scopes.join(','))}`;
+    )}&state=${state}&scope=${encodeURIComponent(scopes.join(','))}&auth_type=rerequest`;
   }
 
   async exchangeCode(code: string): Promise<{ accessToken: string; expiresIn: number }> {

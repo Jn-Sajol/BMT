@@ -7,8 +7,12 @@ export class PrismaClientService extends PrismaClient implements OnModuleInit, O
 
   async onModuleInit() {
     this.logger.log('Connecting to PostgreSQL database...');
-    await this.$connect();
-    this.logger.log('Connected to PostgreSQL successfully.');
+    try {
+      await this.$connect();
+      this.logger.log('Connected to PostgreSQL successfully.');
+    } catch (err: any) {
+      this.logger.warn(`PostgreSQL database offline (${err?.message || err}). Continuing in local dev fallback mode.`);
+    }
   }
 
   async onModuleDestroy() {

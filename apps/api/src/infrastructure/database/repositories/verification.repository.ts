@@ -58,15 +58,27 @@ export class VerificationRepository implements IVerificationRepository {
 
   async save(entity: VerificationToken): Promise<VerificationToken> {
     try {
-      return await this.prisma.verificationToken.upsert({
-        where: { id: entity.id || '' },
-        update: {
-          tokenHash: entity.tokenHash,
-          tokenType: entity.tokenType,
-          expiresAt: entity.expiresAt,
-          usedAt: entity.usedAt,
-        },
-        create: {
+      if (entity.id) {
+        return await this.prisma.verificationToken.upsert({
+          where: { id: entity.id },
+          update: {
+            tokenHash: entity.tokenHash,
+            tokenType: entity.tokenType,
+            expiresAt: entity.expiresAt,
+            usedAt: entity.usedAt,
+          },
+          create: {
+            id: entity.id,
+            userId: entity.userId,
+            tokenHash: entity.tokenHash,
+            tokenType: entity.tokenType,
+            expiresAt: entity.expiresAt,
+            usedAt: entity.usedAt,
+          },
+        });
+      }
+      return await this.prisma.verificationToken.create({
+        data: {
           userId: entity.userId,
           tokenHash: entity.tokenHash,
           tokenType: entity.tokenType,

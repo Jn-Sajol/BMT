@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { UserSession } from '@prisma/client';
 import { CreateSessionDto } from '../../common/dto/session.dto';
 import { IUserSessionService } from '../../common/ports/user-session-service.interface';
@@ -28,7 +29,7 @@ export class UserSessionService implements IUserSessionService {
     const expiresAt = new Date(now.getTime() + durationMs);
 
     const session: UserSession = {
-      id: '',
+      id: randomUUID(),
       userId: dto.userId,
       tokenHash,
       ipAddress: dto.ipAddress || null,

@@ -53,21 +53,39 @@ export class UserSessionRepository implements IUserSessionRepository {
 
   async save(entity: UserSession): Promise<UserSession> {
     try {
-      return await this.prisma.userSession.upsert({
-        where: { id: entity.id || '' },
-        update: {
-          tokenHash: entity.tokenHash,
-          ipAddress: entity.ipAddress,
-          userAgent: entity.userAgent,
-          device: entity.device,
-          browser: entity.browser,
-          os: entity.os,
-          country: entity.country,
-          city: entity.city,
-          lastActivityAt: entity.lastActivityAt,
-          expiresAt: entity.expiresAt,
-        },
-        create: {
+      if (entity.id) {
+        return await this.prisma.userSession.upsert({
+          where: { id: entity.id },
+          update: {
+            tokenHash: entity.tokenHash,
+            ipAddress: entity.ipAddress,
+            userAgent: entity.userAgent,
+            device: entity.device,
+            browser: entity.browser,
+            os: entity.os,
+            country: entity.country,
+            city: entity.city,
+            lastActivityAt: entity.lastActivityAt,
+            expiresAt: entity.expiresAt,
+          },
+          create: {
+            id: entity.id,
+            userId: entity.userId,
+            tokenHash: entity.tokenHash,
+            ipAddress: entity.ipAddress,
+            userAgent: entity.userAgent,
+            device: entity.device,
+            browser: entity.browser,
+            os: entity.os,
+            country: entity.country,
+            city: entity.city,
+            lastActivityAt: entity.lastActivityAt,
+            expiresAt: entity.expiresAt,
+          },
+        });
+      }
+      return await this.prisma.userSession.create({
+        data: {
           userId: entity.userId,
           tokenHash: entity.tokenHash,
           ipAddress: entity.ipAddress,

@@ -11,8 +11,10 @@ import { FacebookGroupRepository } from "./infrastructure/facebook-group.reposit
 import { GroupScheduleRepository } from "./infrastructure/group-schedule.repository"
 import { GroupPublishRepository } from "./infrastructure/group-publish.repository"
 
+import { ActionModule } from "../automation/action/action.module"
+
 @Module({
-  imports: [AutomationCoreModule],
+  imports: [AutomationCoreModule, ActionModule],
   controllers: [FacebookGroupsController],
   providers: [
     FacebookGroupsSyncService,

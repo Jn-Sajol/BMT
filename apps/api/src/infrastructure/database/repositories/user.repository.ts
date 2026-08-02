@@ -38,19 +38,33 @@ export class UserRepository implements IUserRepository {
 
   async save(entity: User): Promise<User> {
     try {
-      return await this.prisma.user.upsert({
-        where: { id: entity.id || '' },
-        update: {
+      if (entity.id) {
+        return await this.prisma.user.upsert({
+          where: { id: entity.id },
+          update: {
+            email: entity.email,
+            name: entity.name,
+            passwordHash: entity.passwordHash,
+            status: entity.status,
+            emailVerifiedAt: entity.emailVerifiedAt,
+          },
+          create: {
+            id: entity.id,
+            email: entity.email,
+            name: entity.name,
+            passwordHash: entity.passwordHash,
+            status: entity.status,
+            emailVerifiedAt: entity.emailVerifiedAt,
+          },
+        });
+      }
+      return await this.prisma.user.create({
+        data: {
           email: entity.email,
           name: entity.name,
           passwordHash: entity.passwordHash,
           status: entity.status,
-        },
-        create: {
-          email: entity.email,
-          name: entity.name,
-          passwordHash: entity.passwordHash,
-          status: entity.status,
+          emailVerifiedAt: entity.emailVerifiedAt,
         },
       });
     } catch (e) {

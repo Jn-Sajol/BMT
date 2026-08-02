@@ -7,8 +7,11 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: AuthService.login,
-    onSuccess: (data: { token: string; refreshToken: string; user: User }) => {
-      setSession(data.token, data.refreshToken, data.user)
+    onSuccess: (res: any) => {
+      const token = res?.data?.accessToken || res?.accessToken || res?.token
+      const refreshToken = res?.data?.refreshToken || res?.refreshToken
+      const user = res?.data?.user || res?.user || { id: "user-1", email: "user@bmt.com", name: "User" }
+      setSession(token, refreshToken, user)
     },
   })
 

@@ -34,7 +34,8 @@ export default function RegisterPage() {
         router.push("/auth/login")
       }, 2000)
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Registration failed. Try again.")
+      const raw = err?.response?.data?.error?.message || err?.response?.data?.message || "Registration failed. Try again."
+      setError(Array.isArray(raw) ? raw.join(", ") : String(raw))
     }
   }
 
