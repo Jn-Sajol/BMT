@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Meta OAuth "Invalid Scopes" error by setting requested user authorization scope to Meta universal standard (`public_profile`) with instant client authorization fallback.
 - Fixed Post Scheduler `queueJobs` state persistence by writing scheduled/posted jobs to `localStorage` (`bmt_queue_jobs`).
 - **[MAJOR]** Replaced fake queue worker simulation with real Facebook Graph API posting engine (`POST /{page-id}/feed`). CARE HUB BD posts now publish to the actual Facebook Page via verified Page Access Token.
+- **[DEPL]** Pushed all Facebook Graph API integration, long-lived token manager (60 days), and multi-page batch scheduling updates to `origin/main` (`commit e30ab08`).
+
 
 
 
