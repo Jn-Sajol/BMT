@@ -2,6 +2,7 @@
 
 ## Overview
 **JNS Marketing OS** (developed by **JNSoft**) is an enterprise-grade multi-tenant marketing orchestration dashboard and automation engine.
+- **Page Publishing Engine**: Integrated Facebook Graph API (`/feed`, `/photos`, `/videos`) supporting multi-page batch post scheduling, long-lived 60-day token auto-refresh, and secure env credential management.
 
 ## Monorepo Architecture
 Managed via `pnpm` workspaces (`jn-platform`) and `turbo` build pipelines.

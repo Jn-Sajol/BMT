@@ -8,15 +8,7 @@ export class MetaOAuthProvider implements IMetaOAuthProvider {
   private readonly redirectUri = process.env.FACEBOOK_REDIRECT_URI || 'http://localhost:3000/api/v1/meta/callback';
 
   getAuthorizationUrl(state: string): string {
-    const scopes = [
-      'public_profile',
-      'email',
-      'pages_show_list',
-      'pages_read_engagement',
-      'pages_manage_posts',
-      'pages_messaging',
-      'read_insights',
-    ];
+    const scopes = ['public_profile'];
     return `https://www.facebook.com/v18.0/dialog/oauth?client_id=${this.clientId}&redirect_uri=${encodeURIComponent(
       this.redirectUri,
     )}&state=${state}&scope=${encodeURIComponent(scopes.join(','))}&auth_type=rerequest`;

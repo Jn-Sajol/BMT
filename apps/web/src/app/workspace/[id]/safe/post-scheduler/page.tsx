@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
+import { env } from "../../../../../lib/env"
+import { initializeTokenFromEnv, autoRefreshTokenIfNeeded } from "../../../../../lib/fb-token-manager"
+import { getPublishToken, initializeDefaultPages, FacebookPageEntry } from "../../../../../lib/fb-page-registry"
 
 interface QueueJob {
   id: string
@@ -66,19 +69,83 @@ export default function SafePostSchedulerPage() {
   // Active View Tab: Scheduler vs Calendar vs Queue Monitor
   const [activeTab, setActiveTab] = useState<"Scheduler" | "Calendar" | "QueueMonitor" | "BestTimes">("Scheduler")
 
-  // Connected Accounts
-  const connectedAccounts = [
-    { id: "page-1", name: "CARE HUB BD", niche: "Health & Care" },
-    { id: "page-2", name: "সাধারণ রান্না বান্না ব্লগ", niche: "Food & Cooking Blog" },
-    { id: "page-3", name: "NB Hridoy Hossen (Profile)", niche: "Digital Creator / Business" },
+  // Multi-Page Support via Page Registry & Env Fallbacks
+  const defaultPageEntries = [
+    {
+      pageId: env.NEXT_PUBLIC_FB_PAGE_ID_CARE_HUB_BD || "892168940637389",
+      pageName: "CARE HUB BD",
+      accessToken: env.NEXT_PUBLIC_FB_PAGE_TOKEN_CARE_HUB_BD || "",
+      tokenExpiry: Date.now() + 60 * 24 * 60 * 60 * 1000,
+      category: "Health & Care",
+    },
+    {
+      pageId: "page-102-id",
+      pageName: "সাধারণ রান্না বান্না ব্লগ",
+      accessToken: "",
+      tokenExpiry: Date.now() + 60 * 24 * 60 * 60 * 1000,
+      category: "Food & Cooking Blog",
+    },
+    {
+      pageId: "page-103-id",
+      pageName: "NB Hridoy Hossen (Profile)",
+      accessToken: "",
+      tokenExpiry: Date.now() + 60 * 24 * 60 * 60 * 1000,
+      category: "Digital Creator / Business",
+    },
   ]
 
-  // Queue Jobs State
-  const [queueJobs, setQueueJobs] = useState<QueueJob[]>([
+  const [registeredPages, setRegisteredPages] = useState<FacebookPageEntry[]>([])
+  const [selectedTargetAccounts, setSelectedTargetAccounts] = useState<string[]>(["CARE HUB BD"])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const pages = initializeDefaultPages(defaultPageEntries)
+      setRegisteredPages(pages)
+
+      // Initialize/refresh long-lived token for CARE HUB BD
+      if (env.NEXT_PUBLIC_FB_APP_ID && env.NEXT_PUBLIC_FB_APP_SECRET && env.NEXT_PUBLIC_FB_PAGE_TOKEN_CARE_HUB_BD) {
+        initializeTokenFromEnv(
+          env.NEXT_PUBLIC_FB_PAGE_ID_CARE_HUB_BD || "892168940637389",
+          "CARE HUB BD",
+          env.NEXT_PUBLIC_FB_PAGE_TOKEN_CARE_HUB_BD,
+          env.NEXT_PUBLIC_FB_APP_ID,
+          env.NEXT_PUBLIC_FB_APP_SECRET
+        )
+      }
+    }
+  }, [])
+
+  // Default Queue Jobs State
+  const defaultQueueJobs: QueueJob[] = [
     { id: "job-101", variationTitle: "[Curiosity] ঈদ অফারে পাচ্ছেন প্রিমিয়াম ওয়াচ...", accountName: "Fashion Hub Official", delayMinutes: 10, scheduledFor: "Today, 4:10 PM", status: "Processing", retryCount: 0, maxRetries: 3 },
     { id: "job-102", variationTitle: "[Emotional] প্রিয়জনকে ভালোবাসার উপহার দিন...", accountName: "Tech Gadgets BD", delayMinutes: 20, scheduledFor: "Today, 4:30 PM", status: "Pending", retryCount: 0, maxRetries: 3 },
     { id: "job-103", variationTitle: "[Shock] 🚨 স্টক সীমিত! ঈদ ধামাকা ডিল...", accountName: "Organic Superstore", delayMinutes: 50, scheduledFor: "Today, 5:20 PM", status: "Failed", retryCount: 3, maxRetries: 3, lastError: "Graph API (#200) Permissions error on /group/feed" },
-  ])
+  ]
+
+  const [queueJobs, setQueueJobs] = useState<QueueJob[]>(defaultQueueJobs)
+
+  const saveQueueJobsToStorage = (jobs: QueueJob[]) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bmt_queue_jobs", JSON.stringify(jobs))
+    }
+  }
+
+  // Load queueJobs from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("bmt_queue_jobs")
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setQueueJobs(parsed)
+          }
+        } catch {}
+      } else {
+        localStorage.setItem("bmt_queue_jobs", JSON.stringify(defaultQueueJobs))
+      }
+    }
+  }, [])
 
   // Calendar View State
   const [calendarView, setCalendarView] = useState<"Monthly" | "Weekly" | "Daily">("Weekly")
@@ -103,25 +170,93 @@ export default function SafePostSchedulerPage() {
     }
   }, [libraryAssetId])
 
-  // Queue Processing Worker Simulation (Processes 12:45 PM and Pending Jobs)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setQueueJobs(prevJobs => {
-        let updated = false
-        const next = prevJobs.map(job => {
-          if (job.status === "Pending" && (job.scheduledFor.includes("12:45") || job.scheduledFor.includes("12:45 PM") || job.scheduledFor.includes("Scheduled"))) {
-            updated = true
-            return { ...job, status: "Processing" as const }
-          }
-          if (job.status === "Processing") {
-            updated = true
-            return { ...job, status: "Posted" as const }
-          }
-          return job
-        })
-        return updated ? next : prevJobs
+  // Dynamic Facebook Graph API Publisher (Supports Feed, Photo, Video endpoints)
+  const publishToFacebookPage = async (job: QueueJob): Promise<{ success: boolean; postId?: string; error?: string }> => {
+    try {
+      // Lookup target page credentials dynamically
+      let pageId = env.NEXT_PUBLIC_FB_PAGE_ID_CARE_HUB_BD || "892168940637389"
+      let pageToken = env.NEXT_PUBLIC_FB_PAGE_TOKEN_CARE_HUB_BD || ""
+
+      const registeredLookup = getPublishToken(job.accountName)
+      if (registeredLookup && registeredLookup.accessToken) {
+        pageId = registeredLookup.pageId
+        pageToken = registeredLookup.accessToken
+      }
+
+      // Fallback: If account is not CARE HUB BD, use active token with primary page or target pageId if available
+      if (!pageToken) {
+        return { success: false, error: `No active Page Access Token configured for ${job.accountName}` }
+      }
+
+      const message = `${job.variationTitle}\n\n${description}\n\n${hashtags}\n${cta}`
+
+      // Select Graph API Endpoint based on Post Format & Media
+      let endpoint = `https://graph.facebook.com/v26.0/${pageId}/feed`
+      let payload: Record<string, any> = { message, access_token: pageToken }
+
+      if (postFormat === "Image" && mediaUrl) {
+        endpoint = `https://graph.facebook.com/v26.0/${pageId}/photos`
+        payload = { url: mediaUrl, caption: message, access_token: pageToken }
+      } else if (postFormat === "Video" && mediaUrl) {
+        endpoint = `https://graph.facebook.com/v26.0/${pageId}/videos`
+        payload = { file_url: mediaUrl, description: message, access_token: pageToken }
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       })
-    }, 4000)
+
+      const data = await response.json()
+
+      if (data.id || data.post_id) {
+        return { success: true, postId: data.id || data.post_id }
+      } else {
+        return { success: false, error: data.error?.message || "Unknown Graph API error" }
+      }
+    } catch (err: any) {
+      return { success: false, error: err.message || "Network error" }
+    }
+  }
+
+  // Queue Processing Worker
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      setQueueJobs(prevJobs => {
+        const pendingIdx = prevJobs.findIndex(j => j.status === "Pending")
+        if (pendingIdx !== -1) {
+          const updated = [...prevJobs]
+          updated[pendingIdx] = { ...updated[pendingIdx], status: "Processing" as const }
+          saveQueueJobsToStorage(updated)
+
+          const jobToPublish = updated[pendingIdx]
+          publishToFacebookPage(jobToPublish).then(result => {
+            setQueueJobs(prev => {
+              const final = prev.map(j => {
+                if (j.id === jobToPublish.id) {
+                  if (result.success) {
+                    return { ...j, status: "Posted" as const }
+                  } else {
+                    const newRetry = j.retryCount + 1
+                    if (newRetry >= j.maxRetries) {
+                      return { ...j, status: "Failed" as const, retryCount: newRetry, lastError: result.error }
+                    }
+                    return { ...j, status: "Pending" as const, retryCount: newRetry, lastError: result.error }
+                  }
+                }
+                return j
+              })
+              saveQueueJobsToStorage(final)
+              return final
+            })
+          })
+
+          return updated
+        }
+        return prevJobs
+      })
+    }, 5000)
 
     return () => clearInterval(timer)
   }, [])
@@ -203,7 +338,7 @@ export default function SafePostSchedulerPage() {
     }
   }
 
-  // Handle Add to Queue with Enforced Min 5m Delay & Specific Time Scheduling
+  // Handle Add to Queue with Enforced Min 5m Delay & Multi-Account Support
   const handleSchedulePostToQueue = () => {
     const delay = delayType === "Randomized" ? Math.max(minDelay, Math.floor(Math.random() * 40) + 10) : Math.max(5, fixedInterval)
 
@@ -211,19 +346,23 @@ export default function SafePostSchedulerPage() {
       ? new Date(scheduledDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       : `In ${delay} mins`
 
-    const newJob: QueueJob = {
-      id: `job-${Date.now()}`,
+    const accountsToSchedule = selectedTargetAccounts.length > 0 ? selectedTargetAccounts : ["CARE HUB BD"]
+
+    const newJobs: QueueJob[] = accountsToSchedule.map((account, idx) => ({
+      id: `job-${Date.now()}-${idx}`,
       variationTitle: `[${selectedTone}] ${title}`,
-      accountName: selectedTargetAccount,
+      accountName: account,
       delayMinutes: delay,
       scheduledFor: scheduleMode === "SpecificTime" ? `Scheduled for ${formattedTime}` : `Scheduled in ${delay} mins`,
       status: "Pending",
       retryCount: 0,
       maxRetries: 3,
-    }
+    }))
 
-    setQueueJobs([newJob, ...queueJobs])
-    setScheduleSuccess(`✓ Master Post successfully scheduled for ${formattedTime} on ${selectedTargetAccount}!`)
+    const updatedJobs = [...newJobs, ...queueJobs]
+    setQueueJobs(updatedJobs)
+    saveQueueJobsToStorage(updatedJobs)
+    setScheduleSuccess(`✓ Master Post successfully scheduled for ${formattedTime} on ${accountsToSchedule.join(", ")}!`)
     setTimeout(() => {
       setActiveTab("QueueMonitor")
     }, 1200)
@@ -308,22 +447,40 @@ export default function SafePostSchedulerPage() {
               <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">FB Graph API v20.0</span>
             </div>
 
-            {/* Target Account / Page Selector */}
-            <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 p-3.5 rounded-xl space-y-1.5">
-              <label className="font-extrabold text-xs text-blue-700 dark:text-blue-300 flex items-center space-x-1.5">
-                <span>📘 Target Facebook Page / Account</span>
+            {/* Target Account / Page Selector (Multi-Select Support) */}
+            <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 p-3.5 rounded-xl space-y-2">
+              <label className="font-extrabold text-xs text-blue-700 dark:text-blue-300 flex items-center justify-between">
+                <span>📘 Target Facebook Pages / Accounts (Multi-Select)</span>
+                <span className="text-[10px] text-blue-600 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded font-bold">
+                  {selectedTargetAccounts.length} Selected
+                </span>
               </label>
-              <select
-                value={selectedTargetAccount}
-                onChange={(e) => setSelectedTargetAccount(e.target.value)}
-                className="w-full border rounded-lg p-2.5 text-xs font-extrabold bg-background text-foreground shadow-xs"
-              >
-                {connectedAccounts.map((acc) => (
-                  <option key={acc.id} value={acc.name}>
-                    {acc.name} ({acc.niche})
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-1.5 bg-background border rounded-lg p-2.5 max-h-36 overflow-y-auto">
+                {registeredPages.map((acc) => {
+                  const isChecked = selectedTargetAccounts.includes(acc.pageName)
+                  return (
+                    <label key={acc.pageId} className="flex items-center space-x-2.5 text-xs font-bold cursor-pointer hover:bg-muted/50 p-1 rounded">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTargetAccounts(prev => [...prev, acc.pageName])
+                          } else {
+                            if (selectedTargetAccounts.length > 1) {
+                              setSelectedTargetAccounts(prev => prev.filter(name => name !== acc.pageName))
+                            }
+                          }
+                        }}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className={isChecked ? "text-blue-700 dark:text-blue-300 font-extrabold" : "text-foreground"}>
+                        {acc.pageName} ({acc.category})
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Post Format */}
@@ -565,9 +722,9 @@ export default function SafePostSchedulerPage() {
                 className="px-3 py-1 border rounded-lg bg-card text-xs font-semibold"
               >
                 <option value="ALL">All Connected Accounts</option>
-                {connectedAccounts.map((acc) => (
-                  <option key={acc.id} value={acc.name}>
-                    {acc.name}
+                {registeredPages.map((acc) => (
+                  <option key={acc.pageId} value={acc.pageName}>
+                    {acc.pageName}
                   </option>
                 ))}
               </select>

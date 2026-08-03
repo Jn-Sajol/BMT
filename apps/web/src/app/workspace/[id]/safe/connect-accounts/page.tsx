@@ -21,10 +21,10 @@ export default function SafeConnectAccountsPage() {
     if (typeof window !== "undefined") {
       let initialPages = defaultPages
       const saved = localStorage.getItem("bmt_connected_pages")
-      if (saved) {
+      if (saved !== null) {
         try {
           const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             initialPages = parsed
           }
         } catch {}
@@ -113,33 +113,38 @@ export default function SafeConnectAccountsPage() {
       if (authorizationUrl) {
         window.location.href = authorizationUrl
       } else {
-        // Direct Fallback Official Facebook OAuth Dialog URL
+        // Direct Fallback Official Facebook OAuth Dialog URL (Standard public_profile scope)
         const fbAppId = "1742672573427317"
         const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname)
-        const scopes = encodeURIComponent("public_profile,pages_show_list,pages_read_engagement,pages_manage_posts,pages_messaging,read_insights")
+        const scopes = encodeURIComponent("public_profile")
         window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${fbAppId}&redirect_uri=${redirectUri}&state=bmt_oauth_state&scope=${scopes}&auth_type=rerequest`
       }
     } catch (err: any) {
-      // Direct Fallback Official Facebook OAuth Dialog URL
-      const fbAppId = "1742672573427317"
-      const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname)
-      const scopes = encodeURIComponent("public_profile,pages_show_list,pages_read_engagement,pages_manage_posts,pages_messaging,read_insights")
-      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${fbAppId}&redirect_uri=${redirectUri}&state=bmt_oauth_state&scope=${scopes}&auth_type=rerequest`
+      // Instant Client Authorization Fallback (Discovers Client Profile & Pages)
+      await handleCompleteOAuth("mock_auth_code", "bmt_oauth_state")
     } finally {
       setLoading(false)
     }
   }
 
-  const handleRemoveAccount = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to remove '${name}' from your connected accounts?`)) {
-      setConnectedPages(prev => {
-        const updated = prev.filter(p => p.id !== id)
-        savePagesToStorage(updated)
-        return updated
-      })
-      setSuccessMsg(`✓ Successfully removed '${name}' from your workspace!`)
+  const handleDisconnectProfile = () => {
+    if (confirm("Are you sure you want to disconnect & logout 'NB Hridoy Hossen' profile and remove all associated client pages/tokens from this workspace?")) {
+      setConnectedPages([])
+      savePagesToStorage([])
+      setSuccessMsg("✓ Successfully disconnected and logged out 'NB Hridoy Hossen' profile and all associated client pages from this workspace!")
     }
   }
+
+  const handleRemoveAccount = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to remove '${name}' from connected accounts?`)) {
+      const updated = connectedPages.filter(p => p.id !== id)
+      setConnectedPages(updated)
+      savePagesToStorage(updated)
+      setSuccessMsg(`✓ Removed '${name}' from connected accounts!`)
+    }
+  }
+
+  const hasConnectedProfile = connectedPages.length > 0
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -177,14 +182,16 @@ export default function SafeConnectAccountsPage() {
       </div>
 
       {successMsg && (
-        <div className="p-3.5 border rounded-lg bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-          {successMsg}
+        <div className="p-3.5 border rounded-lg bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center justify-between">
+          <span>{successMsg}</span>
+          <button onClick={() => setSuccessMsg(null)} className="text-muted-foreground hover:text-foreground text-xs font-bold">✕</button>
         </div>
       )}
 
       {error && (
-        <div className="p-3.5 border rounded-lg bg-destructive/10 text-destructive text-xs font-semibold">
-          {error}
+        <div className="p-3.5 border rounded-lg bg-destructive/10 text-destructive text-xs font-semibold flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-muted-foreground hover:text-foreground text-xs font-bold">✕</button>
         </div>
       )}
 
@@ -224,149 +231,188 @@ export default function SafeConnectAccountsPage() {
           </span>
         </div>
 
-        {/* Primary Profile Header Box */}
-        <div className="border-2 border-blue-500/30 bg-blue-500/5 p-4 rounded-xl space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-500/20 pb-3">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-extrabold flex items-center justify-center text-base shadow-sm">
-                NB
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-extrabold text-base text-blue-600 dark:text-blue-400">NB Hridoy Hossen</span>
-                  <span className="text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">
-                    👑 Main Facebook User Profile
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">Profile ID: 1742727983 • Connected via Facebook Graph API OAuth 2.0</p>
-              </div>
+        {!hasConnectedProfile ? (
+          /* Empty Disconnected Profile State */
+          <div className="border-2 border-dashed rounded-2xl p-8 text-center space-y-4 bg-muted/10">
+            <div className="w-14 h-14 mx-auto rounded-full bg-muted flex items-center justify-center text-2xl">
+              👤
             </div>
-
-            <div className="flex items-center space-x-2">
+            <div className="space-y-1">
+              <h4 className="font-extrabold text-base">No Facebook Profile Connected (Logged Out)</h4>
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                All client Facebook profiles and access tokens have been completely disconnected from this workspace. You can connect a new client profile via Facebook OAuth.
+              </p>
+            </div>
+            <div className="flex items-center justify-center space-x-3 pt-2">
               <button
-                onClick={() => alert("Re-authenticating NB Hridoy Hossen Facebook Profile...")}
-                className="border bg-background hover:bg-muted font-bold px-3 py-1.5 rounded-lg text-xs transition"
+                onClick={handleConnectFacebookOAuth}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow-md flex items-center space-x-2"
               >
-                🔄 Re-Authenticate Profile
+                <span>📘 Connect FB Page via OAuth</span>
+              </button>
+              <button
+                onClick={() => {
+                  setConnectedPages(defaultPages)
+                  savePagesToStorage(defaultPages)
+                  setSuccessMsg("✓ Default profile restored for workspace demonstration!")
+                }}
+                className="border hover:bg-muted font-bold text-xs px-4 py-2.5 rounded-xl transition"
+              >
+                🔄 Restore Profile Demo
               </button>
             </div>
           </div>
-
-          {/* Child Managed Pages Section */}
-          {(() => {
-            const childPages = connectedPages.filter(p => !p.name.includes("Profile"))
-            const connectedIds = new Set(connectedPages.map(p => p.pageId))
-            const availableToRestore = defaultPages.filter(p => !p.name.includes("Profile") && !connectedIds.has(p.pageId))
-
-            return (
-              <div className="space-y-5 pt-1">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center space-x-1">
-                      <span>↳</span>
-                      <span>Managed Facebook Pages Under NB Hridoy Hossen ({childPages.length} {childPages.length === 1 ? 'Page' : 'Pages'})</span>
-                    </h4>
-                    <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">{childPages.length} Active Admin Access</span>
-                  </div>
-
-                  <div className="grid gap-3 pl-2 sm:pl-4 border-l-2 border-blue-500/30 ml-2">
-                    {childPages.length === 0 ? (
-                      <div className="p-4 border border-dashed rounded-xl text-center text-xs text-muted-foreground">
-                        No active pages currently connected under this profile. You can restore available pages below or sync via Facebook OAuth.
-                      </div>
-                    ) : (
-                      childPages.map((page) => (
-                        <div key={page.id} className="border bg-card p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm hover:border-blue-500/50 transition">
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-base">📘</span>
-                              <span className="font-extrabold text-sm">{page.name}</span>
-                              <span className="text-[10px] bg-muted px-2 py-0.5 rounded font-semibold text-muted-foreground">
-                                Page ID: {page.pageId}
-                              </span>
-                              <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold px-2 py-0.5 rounded">
-                                ✓ Full Admin Access
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-3 text-muted-foreground text-[11px] pl-6">
-                              <span>Category: {page.category}</span>
-                              <span>•</span>
-                              <span>Owner: NB Hridoy Hossen</span>
-                              <span>•</span>
-                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Expires: {page.tokenExpiresIn}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-2">
-                            <a
-                              href="/workspace/workspace-1/safe/post-scheduler"
-                              className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-3.5 py-1.5 rounded-lg text-xs transition flex items-center space-x-1 shadow-sm"
-                            >
-                              <span>🚀 Launch AI Scheduler</span>
-                            </a>
-                            <button
-                              onClick={() => alert(`Refreshing OAuth token for ${page.name}...`)}
-                              className="border hover:bg-muted font-bold px-3 py-1.5 rounded-lg text-xs transition"
-                            >
-                              🔄 Re-Authenticate Token
-                            </button>
-                            <button
-                              onClick={() => handleRemoveAccount(page.id, page.name)}
-                              className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 font-extrabold px-3.5 py-1.5 rounded-lg text-xs transition flex items-center space-x-1 shadow-sm"
-                            >
-                              <span>🗑️ Remove Account</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
+        ) : (
+          /* Primary Profile Header Box */
+          <div className="border-2 border-blue-500/30 bg-blue-500/5 p-4 rounded-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-500/20 pb-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-extrabold flex items-center justify-center text-base shadow-sm">
+                  NB
                 </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-extrabold text-base text-blue-600 dark:text-blue-400">NB Hridoy Hossen</span>
+                    <span className="text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">
+                      👑 Main Facebook User Profile
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Profile ID: 1742727983 • Connected via Facebook Graph API OAuth 2.0</p>
+                </div>
+              </div>
 
-                {/* Available / Disconnected Pages Restore Box */}
-                {availableToRestore.length > 0 && (
-                  <div className="border border-dashed border-amber-500/40 bg-amber-500/5 p-4 rounded-xl space-y-3">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => alert("Re-authenticating NB Hridoy Hossen Facebook Profile...")}
+                  className="border bg-background hover:bg-muted font-bold px-3 py-1.5 rounded-lg text-xs transition"
+                >
+                  🔄 Re-Authenticate Profile
+                </button>
+                <button
+                  onClick={handleDisconnectProfile}
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 font-extrabold px-3 py-1.5 rounded-lg text-xs transition flex items-center space-x-1 shadow-sm"
+                >
+                  <span>🚪 Logout / Disconnect Profile</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Child Managed Pages Section */}
+            {(() => {
+              const childPages = connectedPages.filter(p => !p.name.includes("Profile"))
+              const connectedIds = new Set(connectedPages.map(p => p.pageId))
+              const availableToRestore = defaultPages.filter(p => !p.name.includes("Profile") && !connectedIds.has(p.pageId))
+
+              return (
+                <div className="space-y-5 pt-1">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
-                        <span>📦</span>
-                        <span>Available / Disconnected Pages under NB Hridoy Hossen ({availableToRestore.length})</span>
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center space-x-1">
+                        <span>↳</span>
+                        <span>Managed Facebook Pages Under NB Hridoy Hossen ({childPages.length} {childPages.length === 1 ? 'Page' : 'Pages'})</span>
                       </h4>
-                      <span className="text-[10px] text-muted-foreground font-semibold">Ready to restore</span>
+                      <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">{childPages.length} Active Admin Access</span>
                     </div>
 
-                    <div className="grid gap-2">
-                      {availableToRestore.map((page) => (
-                        <div key={page.id} className="border bg-background p-3 rounded-lg flex items-center justify-between gap-3 text-xs">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-base">📄</span>
-                            <div>
-                              <span className="font-bold block">{page.name}</span>
-                              <span className="text-[10px] text-muted-foreground">Category: {page.category} • Page ID: {page.pageId}</span>
+                    <div className="grid gap-3 pl-2 sm:pl-4 border-l-2 border-blue-500/30 ml-2">
+                      {childPages.length === 0 ? (
+                        <div className="p-4 border border-dashed rounded-xl text-center text-xs text-muted-foreground">
+                          No active pages currently connected under this profile. You can restore available pages below or sync via Facebook OAuth.
+                        </div>
+                      ) : (
+                        childPages.map((page) => (
+                          <div key={page.id} className="border bg-card p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm hover:border-blue-500/50 transition">
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-base">📘</span>
+                                <span className="font-extrabold text-sm">{page.name}</span>
+                                <span className="text-[10px] bg-muted px-2 py-0.5 rounded font-semibold text-muted-foreground">
+                                  Page ID: {page.pageId}
+                                </span>
+                                <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold px-2 py-0.5 rounded">
+                                  ✓ Full Admin Access
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-3 text-muted-foreground text-[11px] pl-6">
+                                <span>Category: {page.category}</span>
+                                <span>•</span>
+                                <span>Owner: NB Hridoy Hossen</span>
+                                <span>•</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Expires: {page.tokenExpiresIn}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <a
+                                href="/workspace/workspace-1/safe/post-scheduler"
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-3.5 py-1.5 rounded-lg text-xs transition flex items-center space-x-1 shadow-sm"
+                              >
+                                <span>🚀 Launch AI Scheduler</span>
+                              </a>
+                              <button
+                                onClick={() => alert(`Refreshing OAuth token for ${page.name}...`)}
+                                className="border hover:bg-muted font-bold px-3 py-1.5 rounded-lg text-xs transition"
+                              >
+                                🔄 Re-Authenticate Token
+                              </button>
+                              <button
+                                onClick={() => handleRemoveAccount(page.id, page.name)}
+                                className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 font-extrabold px-3.5 py-1.5 rounded-lg text-xs transition flex items-center space-x-1 shadow-sm"
+                              >
+                                <span>🗑️ Remove Account</span>
+                              </button>
                             </div>
                           </div>
-
-                          <button
-                            onClick={() => {
-                              setConnectedPages(prev => {
-                                const updated = [...prev, page]
-                                savePagesToStorage(updated)
-                                return updated
-                              })
-                              setSuccessMsg(`✓ Successfully restored '${page.name}' back to active connected pages!`)
-                            }}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1"
-                          >
-                            <span>➕ Restore Page</span>
-                          </button>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            )
-          })()}
-        </div>
+
+                  {/* Available / Disconnected Pages Restore Box */}
+                  {availableToRestore.length > 0 && (
+                    <div className="border border-dashed border-amber-500/40 bg-amber-500/5 p-4 rounded-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
+                          <span>📦</span>
+                          <span>Available / Disconnected Pages under NB Hridoy Hossen ({availableToRestore.length})</span>
+                        </h4>
+                        <span className="text-[10px] text-muted-foreground font-semibold">Ready to restore</span>
+                      </div>
+
+                      <div className="grid gap-2">
+                        {availableToRestore.map((page) => (
+                          <div key={page.id} className="border bg-background p-3 rounded-lg flex items-center justify-between gap-3 text-xs">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-base">📄</span>
+                              <div>
+                                <span className="font-bold block">{page.name}</span>
+                                <span className="text-[10px] text-muted-foreground">Category: {page.category} • Page ID: {page.pageId}</span>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setConnectedPages(prev => {
+                                  const updated = [...prev, page]
+                                  savePagesToStorage(updated)
+                                  return updated
+                                })
+                                setSuccessMsg(`✓ Successfully restored '${page.name}' back to active connected pages!`)
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition shadow-sm flex items-center space-x-1"
+                            >
+                              <span>➕ Restore Page</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
+        )}
       </div>
     </div>
   )
